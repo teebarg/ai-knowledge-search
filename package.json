@@ -1,0 +1,19 @@
+{
+  "name": "ai-knowledge-search",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/web",
+    "apps/server"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "scripts": {
+    "build": "npm -ws run build",
+    "dev": "npm -ws run dev",
+    "start": "npm -w apps/server run start",
+    "typecheck": "npm -ws run typecheck",
+    "lint": "npm -ws run lint"
+  }
+}
