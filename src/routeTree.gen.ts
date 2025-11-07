@@ -9,56 +9,19 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as SearchPageRouteImport } from './routes/search-page'
-import { Route as SearchRouteImport } from './routes/search'
-import { Route as LandingRouteImport } from './routes/landing'
-import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as DeferredRouteImport } from './routes/deferred'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PathlessLayoutRouteImport } from './routes/_pathlessLayout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PathlessLayoutAccountIndexRouteImport } from './routes/_pathlessLayout/account/index'
+import { Route as PathlessLayoutAccountSettingsRouteImport } from './routes/_pathlessLayout/account/settings'
+import { Route as PathlessLayoutAccountSearchRouteImport } from './routes/_pathlessLayout/account/search'
+import { Route as PathlessLayoutAccountDocumentsRouteImport } from './routes/_pathlessLayout/account/documents'
+import { Route as PathlessLayoutAccountChatRouteImport } from './routes/_pathlessLayout/account/chat'
 
-const SettingsRoute = SettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchPageRoute = SearchPageRouteImport.update({
-  id: '/search-page',
-  path: '/search-page',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SearchRoute = SearchRouteImport.update({
-  id: '/search',
-  path: '/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LandingRoute = LandingRouteImport.update({
-  id: '/landing',
-  path: '/landing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DocumentsRoute = DocumentsRouteImport.update({
-  id: '/documents',
-  path: '/documents',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DeferredRoute = DeferredRouteImport.update({
   id: '/deferred',
   path: '/deferred',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChatRoute = ChatRouteImport.update({
-  id: '/chat',
-  path: '/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -75,155 +38,117 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PathlessLayoutAccountIndexRoute =
+  PathlessLayoutAccountIndexRouteImport.update({
+    id: '/account/',
+    path: '/account/',
+    getParentRoute: () => PathlessLayoutRoute,
+  } as any)
+const PathlessLayoutAccountSettingsRoute =
+  PathlessLayoutAccountSettingsRouteImport.update({
+    id: '/account/settings',
+    path: '/account/settings',
+    getParentRoute: () => PathlessLayoutRoute,
+  } as any)
+const PathlessLayoutAccountSearchRoute =
+  PathlessLayoutAccountSearchRouteImport.update({
+    id: '/account/search',
+    path: '/account/search',
+    getParentRoute: () => PathlessLayoutRoute,
+  } as any)
+const PathlessLayoutAccountDocumentsRoute =
+  PathlessLayoutAccountDocumentsRouteImport.update({
+    id: '/account/documents',
+    path: '/account/documents',
+    getParentRoute: () => PathlessLayoutRoute,
+  } as any)
+const PathlessLayoutAccountChatRoute =
+  PathlessLayoutAccountChatRouteImport.update({
+    id: '/account/chat',
+    path: '/account/chat',
+    getParentRoute: () => PathlessLayoutRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/chat': typeof ChatRoute
-  '/dashboard': typeof DashboardRoute
   '/deferred': typeof DeferredRoute
-  '/documents': typeof DocumentsRoute
-  '/landing': typeof LandingRoute
-  '/search': typeof SearchRoute
-  '/search-page': typeof SearchPageRoute
-  '/settings': typeof SettingsRoute
+  '/account/chat': typeof PathlessLayoutAccountChatRoute
+  '/account/documents': typeof PathlessLayoutAccountDocumentsRoute
+  '/account/search': typeof PathlessLayoutAccountSearchRoute
+  '/account/settings': typeof PathlessLayoutAccountSettingsRoute
+  '/account': typeof PathlessLayoutAccountIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/chat': typeof ChatRoute
-  '/dashboard': typeof DashboardRoute
   '/deferred': typeof DeferredRoute
-  '/documents': typeof DocumentsRoute
-  '/landing': typeof LandingRoute
-  '/search': typeof SearchRoute
-  '/search-page': typeof SearchPageRoute
-  '/settings': typeof SettingsRoute
+  '/account/chat': typeof PathlessLayoutAccountChatRoute
+  '/account/documents': typeof PathlessLayoutAccountDocumentsRoute
+  '/account/search': typeof PathlessLayoutAccountSearchRoute
+  '/account/settings': typeof PathlessLayoutAccountSettingsRoute
+  '/account': typeof PathlessLayoutAccountIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_pathlessLayout': typeof PathlessLayoutRoute
+  '/_pathlessLayout': typeof PathlessLayoutRouteWithChildren
   '/auth': typeof AuthRoute
-  '/chat': typeof ChatRoute
-  '/dashboard': typeof DashboardRoute
   '/deferred': typeof DeferredRoute
-  '/documents': typeof DocumentsRoute
-  '/landing': typeof LandingRoute
-  '/search': typeof SearchRoute
-  '/search-page': typeof SearchPageRoute
-  '/settings': typeof SettingsRoute
+  '/_pathlessLayout/account/chat': typeof PathlessLayoutAccountChatRoute
+  '/_pathlessLayout/account/documents': typeof PathlessLayoutAccountDocumentsRoute
+  '/_pathlessLayout/account/search': typeof PathlessLayoutAccountSearchRoute
+  '/_pathlessLayout/account/settings': typeof PathlessLayoutAccountSettingsRoute
+  '/_pathlessLayout/account/': typeof PathlessLayoutAccountIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/auth'
-    | '/chat'
-    | '/dashboard'
     | '/deferred'
-    | '/documents'
-    | '/landing'
-    | '/search'
-    | '/search-page'
-    | '/settings'
+    | '/account/chat'
+    | '/account/documents'
+    | '/account/search'
+    | '/account/settings'
+    | '/account'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
-    | '/chat'
-    | '/dashboard'
     | '/deferred'
-    | '/documents'
-    | '/landing'
-    | '/search'
-    | '/search-page'
-    | '/settings'
+    | '/account/chat'
+    | '/account/documents'
+    | '/account/search'
+    | '/account/settings'
+    | '/account'
   id:
     | '__root__'
     | '/'
     | '/_pathlessLayout'
     | '/auth'
-    | '/chat'
-    | '/dashboard'
     | '/deferred'
-    | '/documents'
-    | '/landing'
-    | '/search'
-    | '/search-page'
-    | '/settings'
+    | '/_pathlessLayout/account/chat'
+    | '/_pathlessLayout/account/documents'
+    | '/_pathlessLayout/account/search'
+    | '/_pathlessLayout/account/settings'
+    | '/_pathlessLayout/account/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PathlessLayoutRoute: typeof PathlessLayoutRoute
+  PathlessLayoutRoute: typeof PathlessLayoutRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ChatRoute: typeof ChatRoute
-  DashboardRoute: typeof DashboardRoute
   DeferredRoute: typeof DeferredRoute
-  DocumentsRoute: typeof DocumentsRoute
-  LandingRoute: typeof LandingRoute
-  SearchRoute: typeof SearchRoute
-  SearchPageRoute: typeof SearchPageRoute
-  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/settings': {
-      id: '/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search-page': {
-      id: '/search-page'
-      path: '/search-page'
-      fullPath: '/search-page'
-      preLoaderRoute: typeof SearchPageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/search': {
-      id: '/search'
-      path: '/search'
-      fullPath: '/search'
-      preLoaderRoute: typeof SearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/landing': {
-      id: '/landing'
-      path: '/landing'
-      fullPath: '/landing'
-      preLoaderRoute: typeof LandingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/documents': {
-      id: '/documents'
-      path: '/documents'
-      fullPath: '/documents'
-      preLoaderRoute: typeof DocumentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/deferred': {
       id: '/deferred'
       path: '/deferred'
       fullPath: '/deferred'
       preLoaderRoute: typeof DeferredRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/chat': {
-      id: '/chat'
-      path: '/chat'
-      fullPath: '/chat'
-      preLoaderRoute: typeof ChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -247,21 +172,69 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_pathlessLayout/account/': {
+      id: '/_pathlessLayout/account/'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof PathlessLayoutAccountIndexRouteImport
+      parentRoute: typeof PathlessLayoutRoute
+    }
+    '/_pathlessLayout/account/settings': {
+      id: '/_pathlessLayout/account/settings'
+      path: '/account/settings'
+      fullPath: '/account/settings'
+      preLoaderRoute: typeof PathlessLayoutAccountSettingsRouteImport
+      parentRoute: typeof PathlessLayoutRoute
+    }
+    '/_pathlessLayout/account/search': {
+      id: '/_pathlessLayout/account/search'
+      path: '/account/search'
+      fullPath: '/account/search'
+      preLoaderRoute: typeof PathlessLayoutAccountSearchRouteImport
+      parentRoute: typeof PathlessLayoutRoute
+    }
+    '/_pathlessLayout/account/documents': {
+      id: '/_pathlessLayout/account/documents'
+      path: '/account/documents'
+      fullPath: '/account/documents'
+      preLoaderRoute: typeof PathlessLayoutAccountDocumentsRouteImport
+      parentRoute: typeof PathlessLayoutRoute
+    }
+    '/_pathlessLayout/account/chat': {
+      id: '/_pathlessLayout/account/chat'
+      path: '/account/chat'
+      fullPath: '/account/chat'
+      preLoaderRoute: typeof PathlessLayoutAccountChatRouteImport
+      parentRoute: typeof PathlessLayoutRoute
+    }
   }
 }
 
+interface PathlessLayoutRouteChildren {
+  PathlessLayoutAccountChatRoute: typeof PathlessLayoutAccountChatRoute
+  PathlessLayoutAccountDocumentsRoute: typeof PathlessLayoutAccountDocumentsRoute
+  PathlessLayoutAccountSearchRoute: typeof PathlessLayoutAccountSearchRoute
+  PathlessLayoutAccountSettingsRoute: typeof PathlessLayoutAccountSettingsRoute
+  PathlessLayoutAccountIndexRoute: typeof PathlessLayoutAccountIndexRoute
+}
+
+const PathlessLayoutRouteChildren: PathlessLayoutRouteChildren = {
+  PathlessLayoutAccountChatRoute: PathlessLayoutAccountChatRoute,
+  PathlessLayoutAccountDocumentsRoute: PathlessLayoutAccountDocumentsRoute,
+  PathlessLayoutAccountSearchRoute: PathlessLayoutAccountSearchRoute,
+  PathlessLayoutAccountSettingsRoute: PathlessLayoutAccountSettingsRoute,
+  PathlessLayoutAccountIndexRoute: PathlessLayoutAccountIndexRoute,
+}
+
+const PathlessLayoutRouteWithChildren = PathlessLayoutRoute._addFileChildren(
+  PathlessLayoutRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PathlessLayoutRoute: PathlessLayoutRoute,
+  PathlessLayoutRoute: PathlessLayoutRouteWithChildren,
   AuthRoute: AuthRoute,
-  ChatRoute: ChatRoute,
-  DashboardRoute: DashboardRoute,
   DeferredRoute: DeferredRoute,
-  DocumentsRoute: DocumentsRoute,
-  LandingRoute: LandingRoute,
-  SearchRoute: SearchRoute,
-  SearchPageRoute: SearchPageRoute,
-  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
@@ -271,6 +244,7 @@ import type { getRouter } from './router.tsx'
 import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
   interface Register {
+    ssr: true
     router: Awaited<ReturnType<typeof getRouter>>
   }
 }

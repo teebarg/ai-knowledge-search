@@ -4,6 +4,7 @@ import {
   Link,
   Outlet,
   Scripts,
+  createRootRoute,
   createRootRouteWithContext,
 } from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -14,11 +15,32 @@ import { DefaultCatchBoundary } from "@/components/DefaultCatchBoundary";
 import { NotFound } from "@/components/NotFound";
 import appCss from "@/styles.css?url";
 import { seo } from "@/utils/seo";
-import { Toaster } from "sonner";
+import { createServerFn } from "@tanstack/react-start";
+import { getSupabaseServerClient } from "~/lib/supabase";
 
+const fetchUser = createServerFn({ method: "GET" }).handler(async () => {
+  const supabase = getSupabaseServerClient()
+  const { data, error: _error } = await supabase.auth.getUser();
+
+  if (!data.user?.email) {
+    return null;
+  }
+
+  return {
+    email: data.user.email,
+  };
+});
+// export const Route = createRootRoute({
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
 }>()({
+  beforeLoad: async () => {
+    const user = await fetchUser()
+
+    return {
+      user,
+    }
+  },
   head: () => ({
     meta: [
       {
@@ -83,70 +105,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <div className="p-2 flex gap-2 text-lg">
-          <Link
-            to="/"
-            activeProps={{
-              className: "font-bold",
-            }}
-            activeOptions={{ exact: true }}
-          >
-            Home
-          </Link>{" "}
-          <Link
-            to="/posts"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Posts
-          </Link>{" "}
-          <Link
-            to="/users"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Users
-          </Link>{" "}
-          <Link
-            to="/route-a"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Pathless Layout
-          </Link>{" "}
-          <Link
-            to="/deferred"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            Deferred
-          </Link>{" "}
-          <Link
-            // @ts-expect-error
-            to="/this-route-does-not-exist"
-            activeProps={{
-              className: "font-bold",
-            }}
-          >
-            This Route Does Not Exist
-          </Link>
-        </div>
-        <hr />
         {children}
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
         <Scripts />
-        <Toaster
-          closeButton
-          richColors
-          duration={3000}
-          expand={false}
-          position="top-right"
-        />
       </body>
     </html>
   );

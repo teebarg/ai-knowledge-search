@@ -14,22 +14,19 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Link } from "@tanstack/react-router";
 
 const menuItems = [
-  { title: "Documents", url: "/dashboard/documents", icon: FileText },
-  { title: "Search", url: "/dashboard/search", icon: Search },
-  { title: "Chat", url: "/dashboard/chat", icon: MessageSquare },
-  { title: "Settings", url: "/dashboard/settings", icon: Settings },
+  { title: "Documents", url: "/account/documents", icon: FileText },
+  { title: "Search", url: "/account/search", icon: Search },
+  { title: "Chat", url: "/account/chat", icon: MessageSquare },
+  { title: "Settings", url: "/account/settings", icon: Settings },
 ];
 
 export function DashboardSidebar() {
   const { open } = useSidebar();
-
-  // const isActive = (path: string) => location.pathname === path;
 
   return (
     <Sidebar className={open ? "w-64" : "w-16"} collapsible="icon">
