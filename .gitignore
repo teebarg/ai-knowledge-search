@@ -13,3 +13,4 @@ apps/**/dist/
 *.local
 apps/web/node_modules
 
+settings.json
