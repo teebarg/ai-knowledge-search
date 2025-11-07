@@ -10,9 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DeferredRouteImport } from './routes/deferred'
-import { Route as AuthRouteImport } from './routes/auth'
 import { Route as PathlessLayoutRouteImport } from './routes/_pathlessLayout'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthIndexRouteImport } from './routes/auth/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as PathlessLayoutAccountIndexRouteImport } from './routes/_pathlessLayout/account/index'
 import { Route as PathlessLayoutAccountSettingsRouteImport } from './routes/_pathlessLayout/account/settings'
 import { Route as PathlessLayoutAccountSearchRouteImport } from './routes/_pathlessLayout/account/search'
@@ -24,11 +25,6 @@ const DeferredRoute = DeferredRouteImport.update({
   path: '/deferred',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const PathlessLayoutRoute = PathlessLayoutRouteImport.update({
   id: '/_pathlessLayout',
   getParentRoute: () => rootRouteImport,
@@ -36,6 +32,16 @@ const PathlessLayoutRoute = PathlessLayoutRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthIndexRoute = AuthIndexRouteImport.update({
+  id: '/auth/',
+  path: '/auth/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PathlessLayoutAccountIndexRoute =
@@ -71,8 +77,9 @@ const PathlessLayoutAccountChatRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/deferred': typeof DeferredRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth': typeof AuthIndexRoute
   '/account/chat': typeof PathlessLayoutAccountChatRoute
   '/account/documents': typeof PathlessLayoutAccountDocumentsRoute
   '/account/search': typeof PathlessLayoutAccountSearchRoute
@@ -81,8 +88,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
   '/deferred': typeof DeferredRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth': typeof AuthIndexRoute
   '/account/chat': typeof PathlessLayoutAccountChatRoute
   '/account/documents': typeof PathlessLayoutAccountDocumentsRoute
   '/account/search': typeof PathlessLayoutAccountSearchRoute
@@ -93,8 +101,9 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_pathlessLayout': typeof PathlessLayoutRouteWithChildren
-  '/auth': typeof AuthRoute
   '/deferred': typeof DeferredRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/': typeof AuthIndexRoute
   '/_pathlessLayout/account/chat': typeof PathlessLayoutAccountChatRoute
   '/_pathlessLayout/account/documents': typeof PathlessLayoutAccountDocumentsRoute
   '/_pathlessLayout/account/search': typeof PathlessLayoutAccountSearchRoute
@@ -105,8 +114,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth'
     | '/deferred'
+    | '/auth/callback'
+    | '/auth'
     | '/account/chat'
     | '/account/documents'
     | '/account/search'
@@ -115,8 +125,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth'
     | '/deferred'
+    | '/auth/callback'
+    | '/auth'
     | '/account/chat'
     | '/account/documents'
     | '/account/search'
@@ -126,8 +137,9 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/_pathlessLayout'
-    | '/auth'
     | '/deferred'
+    | '/auth/callback'
+    | '/auth/'
     | '/_pathlessLayout/account/chat'
     | '/_pathlessLayout/account/documents'
     | '/_pathlessLayout/account/search'
@@ -138,8 +150,9 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   PathlessLayoutRoute: typeof PathlessLayoutRouteWithChildren
-  AuthRoute: typeof AuthRoute
   DeferredRoute: typeof DeferredRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthIndexRoute: typeof AuthIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -149,13 +162,6 @@ declare module '@tanstack/react-router' {
       path: '/deferred'
       fullPath: '/deferred'
       preLoaderRoute: typeof DeferredRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_pathlessLayout': {
@@ -170,6 +176,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_pathlessLayout/account/': {
@@ -233,8 +253,9 @@ const PathlessLayoutRouteWithChildren = PathlessLayoutRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PathlessLayoutRoute: PathlessLayoutRouteWithChildren,
-  AuthRoute: AuthRoute,
   DeferredRoute: DeferredRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { User, Key, Brain, LogOut } from "lucide-react";
+import { logoutFn } from "~/lib/auth-server";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export const Route = createFileRoute("/_pathlessLayout/account/settings")({
   component: RouteComponent,
 });
 
 function RouteComponent() {
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logoutFn();
+      toast.success("Signed out");
+      navigate({ to: "/" });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to sign out";
+      toast.error(message);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
   return (
     <div className="max-w-3xl space-y-8 animate-fade-in">
       <div>
@@ -103,9 +123,10 @@ function RouteComponent() {
         </div>
         <Button
           variant="destructive"
-          //  onClick={() => navigate("/")}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
         >
-          Log Out
+          {isLoggingOut ? "Signing out..." : "Log Out"}
         </Button>
       </Card>
     </div>

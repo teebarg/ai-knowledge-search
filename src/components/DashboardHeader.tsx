@@ -11,10 +11,29 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
+import { useNavigate } from "@tanstack/react-router";
+import { logoutFn } from "~/lib/auth-server";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export function DashboardHeader() {
+  const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logoutFn();
+      toast.success("Signed out");
+      navigate({ to: "/" });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to sign out";
+      toast.error(message);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
   return (
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex items-center px-4 md:px-6 gap-4">
       <SidebarTrigger />
@@ -25,7 +44,6 @@ export function DashboardHeader() {
           <Input
             placeholder="Search your knowledge base..."
             className="pl-10"
-            // onClick={() => navigate("/dashboard/search")}
           />
         </div>
       </div>
@@ -48,11 +66,13 @@ export function DashboardHeader() {
         <DropdownMenuContent align="end">
           <DropdownMenuLabel>My Account</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => navigate("/dashboard/settings")}>
+          <DropdownMenuItem
+            onClick={() => navigate({ to: "/account/settings" })}
+          >
             Settings
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => navigate("/")}>
-            Log out
+          <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
+            {isLoggingOut ? "Signing out..." : "Log out"}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

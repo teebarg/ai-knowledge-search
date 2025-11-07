@@ -17,10 +17,12 @@ import appCss from "@/styles.css?url";
 import { seo } from "@/utils/seo";
 import { createServerFn } from "@tanstack/react-start";
 import { getSupabaseServerClient } from "~/lib/supabase";
+import { Toaster } from "sonner";
 
 const fetchUser = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = getSupabaseServerClient()
   const { data, error: _error } = await supabase.auth.getUser();
+  console.log("🚀 ~ file: __root.tsx:25 ~ data:", data)
 
   if (!data.user?.email) {
     return null;
@@ -108,6 +110,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         {children}
         <TanStackRouterDevtools position="bottom-right" />
         <ReactQueryDevtools buttonPosition="bottom-left" />
+        <Toaster closeButton richColors duration={3000} expand={false} position="top-right" />
         <Scripts />
       </body>
     </html>
