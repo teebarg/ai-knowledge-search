@@ -1,4 +1,4 @@
-import { getSupabaseServerClient } from '@/lib/supabase'
+import { getSupabaseServerClient } from '~/lib/supabase/supabase'
 import type { Factor, User } from '@supabase/supabase-js'
 import { createServerFn } from '@tanstack/react-start'
 type SSRSafeUser = User & {

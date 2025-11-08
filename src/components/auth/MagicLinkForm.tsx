@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getSupabaseClient } from "~/lib/supabase-client";
+import { getSupabaseClient } from "~/lib/supabase/supabase-client";
 import { credentialsSchema } from "~/lib/auth-server";
 import { z } from "zod";
 import { useLocation } from "@tanstack/react-router";

@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 /**
  * Supabase client for JWT verification
  */
-function getSupabaseForAuth() {
+function getSupabaseForAuth() {    
     const supabaseUrl = process.env.SUPABASE_URL;
     const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
     

@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
     "dev:web": "vite dev",
-    "dev:api": "tsx watch src/api/index.ts",
+    "dev:api": "node --require dotenv/config --import tsx src/api/index.ts",
     "build": "vite build && tsup src/server/index.ts --format esm --out-dir dist/server",
     "start": "vite start",
     "db:generate": "drizzle-kit generate",
@@ -47,6 +47,7 @@
     "@tanstack/react-start": "^1.132.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "hono": "^4.10.4",
     "hono-openapi": "^1.1.1",

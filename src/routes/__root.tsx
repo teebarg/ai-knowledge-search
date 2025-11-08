@@ -8,34 +8,11 @@ import { DefaultCatchBoundary } from "@/components/DefaultCatchBoundary";
 import { NotFound } from "@/components/NotFound";
 import appCss from "@/styles.css?url";
 import { seo } from "@/utils/seo";
-import { createServerFn } from "@tanstack/react-start";
-import { getSupabaseServerClient } from "~/lib/supabase";
 import { Toaster } from "sonner";
 
-const fetchUser = createServerFn({ method: "GET" }).handler(async () => {
-    const supabase = getSupabaseServerClient();
-    const { data, error: _error } = await supabase.auth.getUser();
-
-    if (!data.user?.email) {
-        return null;
-    }
-
-    return {
-        id: data.user.id,
-        email: data.user.email,
-    };
-});
-// export const Route = createRootRoute({
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
 }>()({
-    beforeLoad: async () => {
-        const user = await fetchUser();
-
-        return {
-            user,
-        };
-    },
     head: () => ({
         meta: [
             {

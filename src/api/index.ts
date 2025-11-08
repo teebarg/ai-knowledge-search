@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Hono } from "hono";
 import { OpenAPIHono, createRoute, z } from "@hono/zod-openapi";
 import { swaggerUI } from "@hono/swagger-ui";
@@ -189,48 +190,92 @@ app.openapi(uploadRoute, async (c) => {
     let title = body.title as string;
 
     if (body.file) {
-      const file = body.file as any;
+      const file = body.file as File;
       if (!file.name) {
-        throw new Error("Invalid file");
+        const errorResponse: z.infer<typeof UploadErrorSchema> = {
+          error: "Invalid file",
+          details: "File must have a name"
+        };
+        return c.json(errorResponse, 400);
       }
+
+      // Check file type
+      if (!file.type || !file.type.includes('pdf')) {
+        const errorResponse: z.infer<typeof UploadErrorSchema> = {
+          error: "Invalid file type",
+          details: "Only PDF files are supported"
+        };
+        return c.json(errorResponse, 400);
+      }
+
       title = title || file.name;
-      text = await extractTextFromPdf(file);
+      
+      // Convert file to buffer
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      text = await extractTextFromPdf(buffer);
     } else if (body.text) {
       text = body.text as string;
       title = title || "Untitled Document";
     } else {
-      throw new Error("No file or text provided");
+      const errorResponse: z.infer<typeof UploadErrorSchema> = {
+        error: "No file or text provided",
+        details: "Please provide either a file or text content"
+      };
+      return c.json(errorResponse, 400);
     }
 
-    const chunks = chunkText(text);
-    const documentId = crypto.randomUUID();
+    // Generate chunks from the extracted text
+    const textChunks = chunkText(text);
+    if (!textChunks || textChunks.length === 0) {
+      const errorResponse: z.infer<typeof UploadErrorSchema> = {
+        error: "Failed to process document",
+        details: "Could not extract any text chunks from the document"
+      };
+      return c.json(errorResponse, 400);
+    }
 
+    const documentId = crypto.randomUUID();
+    const now = new Date();
+
+    // Create the document record
     await db.insert(documents).values({
+      id: documentId,
       title,
       userId: user.id,
-      createdAt: new Date(),
+      status: "processing",
+      chunks: textChunks.length,
+      fileName: body.file ? (body.file as File).name : null,
+      fileType: body.file ? (body.file as File).type : null,
+      fileSize: body.file ? (body.file as File).size : null,
+      createdAt: now,
+      updatedAt: now,
     });
 
-    for (const chunk of chunks) {
+    // Store each chunk with its embedding
+    for (const chunk of textChunks) {
       await embedAndStore(chunk, documentId, user.id);
     }
 
-    return c.json({
+    // Update document status to completed
+    await db
+      .update(documents)
+      .set({ status: "completed", updatedAt: new Date() })
+      .where(eq(documents.id, documentId));
+
+    const successResponse: z.infer<typeof UploadResponseSchema> = {
       ok: true,
       documentId,
-      chunks: chunks.length,
-    });
+      chunks: textChunks.length,
+    };
+
+    return c.json(successResponse, 200);
   } catch (error) {
-    if (
-      (error instanceof Error && error.message === "Invalid file") ||
-      error.message === "No file or text provided"
-    ) {
-      return c.json({ error: error.message }, 400);
-    }
-    throw new Error(
-      "Failed to process document: " +
-        (error instanceof Error ? error.message : String(error))
-    );
+    const errorResponse: z.infer<typeof UploadErrorSchema> = {
+      error: "Failed to process document",
+      details: error instanceof Error ? error.message : String(error)
+    };
+    return c.json(errorResponse, 500);
   }
 });
 
@@ -272,28 +317,31 @@ const searchRoute = createRoute({
 
 app.openapi(searchRoute, async (c) => {
   const user = await getAuthenticatedUser(c);
-  const { query, topK = 5 } = await c.req.json();
+  const { query, topK = 5 } = await c.req.json<z.infer<typeof SearchRequestSchema>>();
 
   try {
-    const results = await searchSimilarEmbeddings(query, user.id, topK);
+    const embeddings = await generateEmbeddings([query]);
+    const queryEmbedding = embeddings[0];
+    const results = await searchSimilarEmbeddings(queryEmbedding, user.id, topK);
     const genAI = getGemini();
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const prompt = `Based on the following search results, summarize the relevant information about "${query}":\n\n${results.map((r) => r.payload.text_chunk).join("\n\n")}`;
     const result = await model.generateContent(prompt);
     const summary = result.response.text();
 
-    const response = {
+    const successResponse: z.infer<typeof SearchResponseSchema> = {
       results,
       summary,
       query,
-    } satisfies z.infer<typeof SearchResponseSchema>;
+    };
 
-    return c.json(response);
+    return c.json(successResponse, 200);
   } catch (error) {
-    throw new Error(
-      "Failed to perform search: " +
-        (error instanceof Error ? error.message : String(error))
-    );
+    const errorResponse: z.infer<typeof ErrorSchema> = {
+      error: "Failed to perform search",
+      details: error instanceof Error ? error.message : String(error)
+    };
+    return c.json(errorResponse, 500);
   }
 });
 
@@ -335,7 +383,7 @@ const chatRoute = createRoute({
 
 app.openapi(chatRoute, async (c) => {
   const user = await getAuthenticatedUser(c);
-  const { query, topK = 5 } = await c.req.json();
+  const { query, topK = 5 } = await c.req.json<z.infer<typeof SearchRequestSchema>>();
 
   try {
     const stream = await chatWithKnowledge(query, user.id, topK);
@@ -347,10 +395,11 @@ app.openapi(chatRoute, async (c) => {
       },
     });
   } catch (error) {
-    throw new Error(
-      "Failed to process chat: " +
-        (error instanceof Error ? error.message : String(error))
-    );
+    const errorResponse: z.infer<typeof ErrorSchema> = {
+      error: "Failed to process chat",
+      details: error instanceof Error ? error.message : String(error)
+    };
+    return c.json(errorResponse, 500);
   }
 });
 
@@ -385,24 +434,29 @@ app.openapi(documentsRoute, async (c) => {
   const user = await getAuthenticatedUser(c);
 
   try {
+    // Then try to fetch documents
     const userDocuments = await db
       .select()
       .from(documents)
       .where(eq(documents.userId, user.id))
       .orderBy(desc(documents.createdAt));
 
-    return c.json(
-      userDocuments.map((doc) => ({
-        ...doc,
-        createdAt: doc.createdAt.toISOString(),
-        updatedAt: doc.updatedAt.toISOString(),
-      }))
-    );
+    console.log(`Found ${userDocuments.length} documents for user`);
+
+    const formattedDocs: z.infer<typeof DocumentSchema>[] = userDocuments.map((doc) => ({
+      ...doc,
+      createdAt: doc.createdAt.toISOString(),
+      updatedAt: doc.updatedAt.toISOString(),
+    }));
+
+    return c.json(formattedDocs, 200);
   } catch (error) {
-    throw new Error(
-      "Failed to fetch documents: " +
-        (error instanceof Error ? error.message : String(error))
-    );
+    console.error('Error in documents route:', error);
+    const errorResponse: z.infer<typeof ErrorSchema> = {
+      error: "Failed to fetch documents",
+      details: error instanceof Error ? error.message : String(error)
+    };
+    return c.json(errorResponse, 500);
   }
 });
 

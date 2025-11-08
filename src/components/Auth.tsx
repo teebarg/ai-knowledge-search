@@ -8,7 +8,7 @@ import { Sparkles } from "lucide-react";
 import { LoginForm } from "./auth/LoginForm";
 import { SignupForm } from "./auth/SignupForm";
 import { MagicLinkForm } from "./auth/MagicLinkForm";
-import { getSupabaseClient } from "~/lib/supabase-client";
+import { getSupabaseClient } from "~/lib/supabase/supabase-client";
 
 const GoogleIcon = () => (
     <svg viewBox="0 0 24 24" className="h-5 w-5">

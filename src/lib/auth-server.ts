@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { getSupabaseServerClient } from "./supabase";
+import { getSupabaseServerClient } from "./supabase/supabase";
 
 // Validation schemas
 export const credentialsSchema = z.object({

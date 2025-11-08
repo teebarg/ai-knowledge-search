@@ -3,13 +3,19 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "~/components/DashboardSidebar";
 import { DashboardHeader } from "~/components/DashboardHeader";
 import Auth from "~/components/Auth";
+import { fetchUser } from "~/lib/supabase/fetch-user-server-fn";
 
 export const Route = createFileRoute("/_protected")({
     component: PathlessLayoutComponent,
-    beforeLoad: ({ context }) => {
-        if (!context.user) {
+    beforeLoad: async ({ context }) => {
+        const user = await fetchUser();
+        console.log("🚀 ~ file: _protected.tsx:15 ~ user:", user?.id)
+        if (!user) {
             throw new Error("Not authenticated");
         }
+        return {
+            user,
+        };
     },
     errorComponent: ({ error }) => {
         if (error.message === "Not authenticated") {

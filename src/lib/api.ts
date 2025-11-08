@@ -2,7 +2,7 @@
  * API utility functions for communicating with the backend
  */
 
-import { getSupabaseClient } from "./supabase-client";
+import { getSupabaseClient } from "./supabase/supabase-client";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "";
 
