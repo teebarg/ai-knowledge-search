@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: tanstack-hono-dev
+    ports:
+      - "2000:5173"  # Vite frontend
+      - "2001:8787"  # Hono API
+    volumes:
+      # Mount source code for hot reload
+      - ./app:/app/app
+      - ./server:/app/server
+      - ./public:/app/public
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+      - ./tsconfig.json:/app/tsconfig.json
+      # Preserve node_modules
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:2001
+    stdin_open: true
+    tty: true
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
