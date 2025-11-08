@@ -1,11 +1,13 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouteContext } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Send, Bot, User, FileText } from "lucide-react";
+import { Send, Bot, User, FileText, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { chatWithKnowledge } from "@/lib/api";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_protected/account/chat")({
     component: RouteComponent,
@@ -19,7 +21,9 @@ interface Message {
 }
 
 function RouteComponent() {
+    const { user } = useRouteContext({ from: "/_protected" });
     const [input, setInput] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "1",
@@ -29,25 +33,67 @@ function RouteComponent() {
         },
     ]);
 
-    const handleSend = () => {
-        if (!input.trim()) return;
+    const handleSend = async () => {
+        if (!input.trim() || isLoading) return;
 
+        const query = input.trim();
         const userMessage: Message = {
             id: Date.now().toString(),
             role: "user",
-            content: input,
+            content: query,
         };
 
-        const assistantMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: "assistant",
-            content:
-                "Based on your documents, I found relevant information in the Q4 Business Report. The data shows significant growth in customer acquisition and retention metrics.",
-            citations: ["Q4 Business Report.pdf - Page 12", "Product Roadmap.docx - Section 3"],
-        };
-
-        setMessages([...messages, userMessage, assistantMessage]);
+        setMessages((prev) => [...prev, userMessage]);
         setInput("");
+        setIsLoading(true);
+
+        // Create a placeholder assistant message that we'll update with streaming content
+        const assistantMessageId = (Date.now() + 1).toString();
+        const assistantMessage: Message = {
+            id: assistantMessageId,
+            role: "assistant",
+            content: "",
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+
+        try {
+            let fullResponse = "";
+            await chatWithKnowledge(
+                query,
+                5,
+                (chunk) => {
+                    fullResponse += chunk;
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === assistantMessageId
+                                ? { ...msg, content: fullResponse }
+                                : msg
+                        )
+                    );
+                },
+                (error) => {
+                    toast.error("Failed to get response: " + error.message);
+                    setMessages((prev) =>
+                        prev.map((msg) =>
+                            msg.id === assistantMessageId
+                                ? { ...msg, content: "Sorry, I encountered an error. Please try again." }
+                                : msg
+                        )
+                    );
+                }
+            );
+        } catch (error) {
+            toast.error("Failed to send message: " + (error instanceof Error ? error.message : "Unknown error"));
+            setMessages((prev) =>
+                prev.map((msg) =>
+                    msg.id === assistantMessageId
+                        ? { ...msg, content: "Sorry, I encountered an error. Please try again." }
+                        : msg
+                )
+            );
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -104,8 +150,8 @@ function RouteComponent() {
                             onKeyPress={(e) => e.key === "Enter" && handleSend()}
                             className="flex-1"
                         />
-                        <Button onClick={handleSend} disabled={!input.trim()}>
-                            <Send className="h-4 w-4" />
+                        <Button onClick={handleSend} disabled={!input.trim() || isLoading}>
+                            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                         </Button>
                     </div>
                 </div>
