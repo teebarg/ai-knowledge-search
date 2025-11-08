@@ -10,23 +10,31 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DeferredRouteImport } from './routes/deferred'
-import { Route as PathlessLayoutRouteImport } from './routes/_pathlessLayout'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ProtectedRouteImport } from './routes/_protected'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
-import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
-import { Route as PathlessLayoutAccountIndexRouteImport } from './routes/_pathlessLayout/account/index'
-import { Route as PathlessLayoutAccountSettingsRouteImport } from './routes/_pathlessLayout/account/settings'
-import { Route as PathlessLayoutAccountSearchRouteImport } from './routes/_pathlessLayout/account/search'
-import { Route as PathlessLayoutAccountDocumentsRouteImport } from './routes/_pathlessLayout/account/documents'
-import { Route as PathlessLayoutAccountChatRouteImport } from './routes/_pathlessLayout/account/chat'
+import { Route as AuthOauthRouteImport } from './routes/auth/oauth'
+import { Route as AuthErrorRouteImport } from './routes/auth/error'
+import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
+import { Route as ProtectedAccountIndexRouteImport } from './routes/_protected/account/index'
+import { Route as ProtectedAccountSettingsRouteImport } from './routes/_protected/account/settings'
+import { Route as ProtectedAccountSearchRouteImport } from './routes/_protected/account/search'
+import { Route as ProtectedAccountDocumentsRouteImport } from './routes/_protected/account/documents'
+import { Route as ProtectedAccountChatRouteImport } from './routes/_protected/account/chat'
 
 const DeferredRoute = DeferredRouteImport.update({
   id: '/deferred',
   path: '/deferred',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PathlessLayoutRoute = PathlessLayoutRouteImport.update({
-  id: '/_pathlessLayout',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProtectedRoute = ProtectedRouteImport.update({
+  id: '/_protected',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -35,88 +43,106 @@ const IndexRoute = IndexRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthIndexRoute = AuthIndexRouteImport.update({
-  id: '/auth/',
-  path: '/auth/',
-  getParentRoute: () => rootRouteImport,
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthRoute,
 } as any)
-const AuthCallbackRoute = AuthCallbackRouteImport.update({
-  id: '/auth/callback',
-  path: '/auth/callback',
-  getParentRoute: () => rootRouteImport,
+const AuthOauthRoute = AuthOauthRouteImport.update({
+  id: '/oauth',
+  path: '/oauth',
+  getParentRoute: () => AuthRoute,
 } as any)
-const PathlessLayoutAccountIndexRoute =
-  PathlessLayoutAccountIndexRouteImport.update({
-    id: '/account/',
-    path: '/account/',
-    getParentRoute: () => PathlessLayoutRoute,
-  } as any)
-const PathlessLayoutAccountSettingsRoute =
-  PathlessLayoutAccountSettingsRouteImport.update({
+const AuthErrorRoute = AuthErrorRouteImport.update({
+  id: '/error',
+  path: '/error',
+  getParentRoute: () => AuthRoute,
+} as any)
+const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedAccountIndexRoute = ProtectedAccountIndexRouteImport.update({
+  id: '/account/',
+  path: '/account/',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedAccountSettingsRoute =
+  ProtectedAccountSettingsRouteImport.update({
     id: '/account/settings',
     path: '/account/settings',
-    getParentRoute: () => PathlessLayoutRoute,
+    getParentRoute: () => ProtectedRoute,
   } as any)
-const PathlessLayoutAccountSearchRoute =
-  PathlessLayoutAccountSearchRouteImport.update({
-    id: '/account/search',
-    path: '/account/search',
-    getParentRoute: () => PathlessLayoutRoute,
-  } as any)
-const PathlessLayoutAccountDocumentsRoute =
-  PathlessLayoutAccountDocumentsRouteImport.update({
+const ProtectedAccountSearchRoute = ProtectedAccountSearchRouteImport.update({
+  id: '/account/search',
+  path: '/account/search',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedAccountDocumentsRoute =
+  ProtectedAccountDocumentsRouteImport.update({
     id: '/account/documents',
     path: '/account/documents',
-    getParentRoute: () => PathlessLayoutRoute,
+    getParentRoute: () => ProtectedRoute,
   } as any)
-const PathlessLayoutAccountChatRoute =
-  PathlessLayoutAccountChatRouteImport.update({
-    id: '/account/chat',
-    path: '/account/chat',
-    getParentRoute: () => PathlessLayoutRoute,
-  } as any)
+const ProtectedAccountChatRoute = ProtectedAccountChatRouteImport.update({
+  id: '/account/chat',
+  path: '/account/chat',
+  getParentRoute: () => ProtectedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRouteWithChildren
   '/deferred': typeof DeferredRoute
-  '/auth/callback': typeof AuthCallbackRoute
-  '/auth': typeof AuthIndexRoute
-  '/account/chat': typeof PathlessLayoutAccountChatRoute
-  '/account/documents': typeof PathlessLayoutAccountDocumentsRoute
-  '/account/search': typeof PathlessLayoutAccountSearchRoute
-  '/account/settings': typeof PathlessLayoutAccountSettingsRoute
-  '/account': typeof PathlessLayoutAccountIndexRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/oauth': typeof AuthOauthRoute
+  '/auth/': typeof AuthIndexRoute
+  '/account/chat': typeof ProtectedAccountChatRoute
+  '/account/documents': typeof ProtectedAccountDocumentsRoute
+  '/account/search': typeof ProtectedAccountSearchRoute
+  '/account/settings': typeof ProtectedAccountSettingsRoute
+  '/account': typeof ProtectedAccountIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/deferred': typeof DeferredRoute
-  '/auth/callback': typeof AuthCallbackRoute
+  '/profile': typeof ProtectedProfileRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/oauth': typeof AuthOauthRoute
   '/auth': typeof AuthIndexRoute
-  '/account/chat': typeof PathlessLayoutAccountChatRoute
-  '/account/documents': typeof PathlessLayoutAccountDocumentsRoute
-  '/account/search': typeof PathlessLayoutAccountSearchRoute
-  '/account/settings': typeof PathlessLayoutAccountSettingsRoute
-  '/account': typeof PathlessLayoutAccountIndexRoute
+  '/account/chat': typeof ProtectedAccountChatRoute
+  '/account/documents': typeof ProtectedAccountDocumentsRoute
+  '/account/search': typeof ProtectedAccountSearchRoute
+  '/account/settings': typeof ProtectedAccountSettingsRoute
+  '/account': typeof ProtectedAccountIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_pathlessLayout': typeof PathlessLayoutRouteWithChildren
+  '/_protected': typeof ProtectedRouteWithChildren
+  '/auth': typeof AuthRouteWithChildren
   '/deferred': typeof DeferredRoute
-  '/auth/callback': typeof AuthCallbackRoute
+  '/_protected/profile': typeof ProtectedProfileRoute
+  '/auth/error': typeof AuthErrorRoute
+  '/auth/oauth': typeof AuthOauthRoute
   '/auth/': typeof AuthIndexRoute
-  '/_pathlessLayout/account/chat': typeof PathlessLayoutAccountChatRoute
-  '/_pathlessLayout/account/documents': typeof PathlessLayoutAccountDocumentsRoute
-  '/_pathlessLayout/account/search': typeof PathlessLayoutAccountSearchRoute
-  '/_pathlessLayout/account/settings': typeof PathlessLayoutAccountSettingsRoute
-  '/_pathlessLayout/account/': typeof PathlessLayoutAccountIndexRoute
+  '/_protected/account/chat': typeof ProtectedAccountChatRoute
+  '/_protected/account/documents': typeof ProtectedAccountDocumentsRoute
+  '/_protected/account/search': typeof ProtectedAccountSearchRoute
+  '/_protected/account/settings': typeof ProtectedAccountSettingsRoute
+  '/_protected/account/': typeof ProtectedAccountIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/deferred'
-    | '/auth/callback'
     | '/auth'
+    | '/deferred'
+    | '/profile'
+    | '/auth/error'
+    | '/auth/oauth'
+    | '/auth/'
     | '/account/chat'
     | '/account/documents'
     | '/account/search'
@@ -126,7 +152,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/deferred'
-    | '/auth/callback'
+    | '/profile'
+    | '/auth/error'
+    | '/auth/oauth'
     | '/auth'
     | '/account/chat'
     | '/account/documents'
@@ -136,23 +164,25 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/_pathlessLayout'
+    | '/_protected'
+    | '/auth'
     | '/deferred'
-    | '/auth/callback'
+    | '/_protected/profile'
+    | '/auth/error'
+    | '/auth/oauth'
     | '/auth/'
-    | '/_pathlessLayout/account/chat'
-    | '/_pathlessLayout/account/documents'
-    | '/_pathlessLayout/account/search'
-    | '/_pathlessLayout/account/settings'
-    | '/_pathlessLayout/account/'
+    | '/_protected/account/chat'
+    | '/_protected/account/documents'
+    | '/_protected/account/search'
+    | '/_protected/account/settings'
+    | '/_protected/account/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  PathlessLayoutRoute: typeof PathlessLayoutRouteWithChildren
+  ProtectedRoute: typeof ProtectedRouteWithChildren
+  AuthRoute: typeof AuthRouteWithChildren
   DeferredRoute: typeof DeferredRoute
-  AuthCallbackRoute: typeof AuthCallbackRoute
-  AuthIndexRoute: typeof AuthIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -164,11 +194,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeferredRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_pathlessLayout': {
-      id: '/_pathlessLayout'
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_protected': {
+      id: '/_protected'
       path: ''
       fullPath: ''
-      preLoaderRoute: typeof PathlessLayoutRouteImport
+      preLoaderRoute: typeof ProtectedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -180,82 +217,111 @@ declare module '@tanstack/react-router' {
     }
     '/auth/': {
       id: '/auth/'
-      path: '/auth'
-      fullPath: '/auth'
+      path: '/'
+      fullPath: '/auth/'
       preLoaderRoute: typeof AuthIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/auth/callback': {
-      id: '/auth/callback'
-      path: '/auth/callback'
-      fullPath: '/auth/callback'
-      preLoaderRoute: typeof AuthCallbackRouteImport
-      parentRoute: typeof rootRouteImport
+    '/auth/oauth': {
+      id: '/auth/oauth'
+      path: '/oauth'
+      fullPath: '/auth/oauth'
+      preLoaderRoute: typeof AuthOauthRouteImport
+      parentRoute: typeof AuthRoute
     }
-    '/_pathlessLayout/account/': {
-      id: '/_pathlessLayout/account/'
+    '/auth/error': {
+      id: '/auth/error'
+      path: '/error'
+      fullPath: '/auth/error'
+      preLoaderRoute: typeof AuthErrorRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_protected/profile': {
+      id: '/_protected/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProtectedProfileRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/account/': {
+      id: '/_protected/account/'
       path: '/account'
       fullPath: '/account'
-      preLoaderRoute: typeof PathlessLayoutAccountIndexRouteImport
-      parentRoute: typeof PathlessLayoutRoute
+      preLoaderRoute: typeof ProtectedAccountIndexRouteImport
+      parentRoute: typeof ProtectedRoute
     }
-    '/_pathlessLayout/account/settings': {
-      id: '/_pathlessLayout/account/settings'
+    '/_protected/account/settings': {
+      id: '/_protected/account/settings'
       path: '/account/settings'
       fullPath: '/account/settings'
-      preLoaderRoute: typeof PathlessLayoutAccountSettingsRouteImport
-      parentRoute: typeof PathlessLayoutRoute
+      preLoaderRoute: typeof ProtectedAccountSettingsRouteImport
+      parentRoute: typeof ProtectedRoute
     }
-    '/_pathlessLayout/account/search': {
-      id: '/_pathlessLayout/account/search'
+    '/_protected/account/search': {
+      id: '/_protected/account/search'
       path: '/account/search'
       fullPath: '/account/search'
-      preLoaderRoute: typeof PathlessLayoutAccountSearchRouteImport
-      parentRoute: typeof PathlessLayoutRoute
+      preLoaderRoute: typeof ProtectedAccountSearchRouteImport
+      parentRoute: typeof ProtectedRoute
     }
-    '/_pathlessLayout/account/documents': {
-      id: '/_pathlessLayout/account/documents'
+    '/_protected/account/documents': {
+      id: '/_protected/account/documents'
       path: '/account/documents'
       fullPath: '/account/documents'
-      preLoaderRoute: typeof PathlessLayoutAccountDocumentsRouteImport
-      parentRoute: typeof PathlessLayoutRoute
+      preLoaderRoute: typeof ProtectedAccountDocumentsRouteImport
+      parentRoute: typeof ProtectedRoute
     }
-    '/_pathlessLayout/account/chat': {
-      id: '/_pathlessLayout/account/chat'
+    '/_protected/account/chat': {
+      id: '/_protected/account/chat'
       path: '/account/chat'
       fullPath: '/account/chat'
-      preLoaderRoute: typeof PathlessLayoutAccountChatRouteImport
-      parentRoute: typeof PathlessLayoutRoute
+      preLoaderRoute: typeof ProtectedAccountChatRouteImport
+      parentRoute: typeof ProtectedRoute
     }
   }
 }
 
-interface PathlessLayoutRouteChildren {
-  PathlessLayoutAccountChatRoute: typeof PathlessLayoutAccountChatRoute
-  PathlessLayoutAccountDocumentsRoute: typeof PathlessLayoutAccountDocumentsRoute
-  PathlessLayoutAccountSearchRoute: typeof PathlessLayoutAccountSearchRoute
-  PathlessLayoutAccountSettingsRoute: typeof PathlessLayoutAccountSettingsRoute
-  PathlessLayoutAccountIndexRoute: typeof PathlessLayoutAccountIndexRoute
+interface ProtectedRouteChildren {
+  ProtectedProfileRoute: typeof ProtectedProfileRoute
+  ProtectedAccountChatRoute: typeof ProtectedAccountChatRoute
+  ProtectedAccountDocumentsRoute: typeof ProtectedAccountDocumentsRoute
+  ProtectedAccountSearchRoute: typeof ProtectedAccountSearchRoute
+  ProtectedAccountSettingsRoute: typeof ProtectedAccountSettingsRoute
+  ProtectedAccountIndexRoute: typeof ProtectedAccountIndexRoute
 }
 
-const PathlessLayoutRouteChildren: PathlessLayoutRouteChildren = {
-  PathlessLayoutAccountChatRoute: PathlessLayoutAccountChatRoute,
-  PathlessLayoutAccountDocumentsRoute: PathlessLayoutAccountDocumentsRoute,
-  PathlessLayoutAccountSearchRoute: PathlessLayoutAccountSearchRoute,
-  PathlessLayoutAccountSettingsRoute: PathlessLayoutAccountSettingsRoute,
-  PathlessLayoutAccountIndexRoute: PathlessLayoutAccountIndexRoute,
+const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedProfileRoute: ProtectedProfileRoute,
+  ProtectedAccountChatRoute: ProtectedAccountChatRoute,
+  ProtectedAccountDocumentsRoute: ProtectedAccountDocumentsRoute,
+  ProtectedAccountSearchRoute: ProtectedAccountSearchRoute,
+  ProtectedAccountSettingsRoute: ProtectedAccountSettingsRoute,
+  ProtectedAccountIndexRoute: ProtectedAccountIndexRoute,
 }
 
-const PathlessLayoutRouteWithChildren = PathlessLayoutRoute._addFileChildren(
-  PathlessLayoutRouteChildren,
+const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
+  ProtectedRouteChildren,
 )
+
+interface AuthRouteChildren {
+  AuthErrorRoute: typeof AuthErrorRoute
+  AuthOauthRoute: typeof AuthOauthRoute
+  AuthIndexRoute: typeof AuthIndexRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthErrorRoute: AuthErrorRoute,
+  AuthOauthRoute: AuthOauthRoute,
+  AuthIndexRoute: AuthIndexRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  PathlessLayoutRoute: PathlessLayoutRouteWithChildren,
+  ProtectedRoute: ProtectedRouteWithChildren,
+  AuthRoute: AuthRouteWithChildren,
   DeferredRoute: DeferredRoute,
-  AuthCallbackRoute: AuthCallbackRoute,
-  AuthIndexRoute: AuthIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

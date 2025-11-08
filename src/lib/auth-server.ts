@@ -4,82 +4,62 @@ import { getSupabaseServerClient } from "./supabase";
 
 // Validation schemas
 export const credentialsSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 export const signupSchema = credentialsSchema.extend({
-  redirectUrl: z.string().optional(),
-  fullName: z.string().optional(),
+    redirectUrl: z.string().optional(),
+    fullName: z.string().optional(),
 });
 
 export const oauthSchema = z.object({
-  redirectTo: z.string().optional(),
+    redirectTo: z.string().optional(),
 });
 
 // Server functions
 export const loginFn = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => credentialsSchema.parse(input))
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email: data.email,
-      password: data.password,
+    .inputValidator((input: unknown) => credentialsSchema.parse(input))
+    .handler(async ({ data }) => {
+        const supabase = getSupabaseServerClient();
+        const { error } = await supabase.auth.signInWithPassword({
+            email: data.email,
+            password: data.password,
+        });
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return { success: true } as const;
     });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    return { success: true } as const;
-  });
 
 export const signupFn = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => signupSchema.parse(input))
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient();
-    const { error } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
-      options: {
-        emailRedirectTo: data.redirectUrl,
-        data: data.fullName ? { full_name: data.fullName } : undefined,
-      },
+    .inputValidator((input: unknown) => signupSchema.parse(input))
+    .handler(async ({ data }) => {
+        const supabase = getSupabaseServerClient();
+        const { error } = await supabase.auth.signUp({
+            email: data.email,
+            password: data.password,
+            options: {
+                emailRedirectTo: data.redirectUrl,
+                data: data.fullName ? { full_name: data.fullName } : undefined,
+            },
+        });
+
+        if (error) {
+            throw new Error(error.message);
+        }
+
+        return { success: true } as const;
     });
 
+export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
+    const supabase = getSupabaseServerClient();
+    const { error } = await supabase.auth.signOut();
     if (error) {
-      throw new Error(error.message);
+        throw new Error(error.message);
     }
 
     return { success: true } as const;
-  });
-
-export const loginGoogleFn = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => oauthSchema.parse(input ?? {}))
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient();
-    const fallbackRedirect = process.env.PUBLIC_SITE_URL;
-    const { data: result, error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: data.redirectTo ?? fallbackRedirect,
-      },
-    });
-
-    if (error || !result?.url) {
-      throw new Error(error?.message ?? "Unable to start Google sign-in");
-    }
-
-    return { url: result.url } as const;
-  });
-
-export const logoutFn = createServerFn({ method: "POST" }).handler(async () => {
-  const supabase = getSupabaseServerClient();
-  const { error } = await supabase.auth.signOut();
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return { success: true } as const;
 });
-
