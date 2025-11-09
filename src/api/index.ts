@@ -326,7 +326,7 @@ app.openapi(searchRoute, async (c) => {
         const queryEmbedding = embeddings[0];
         const results = await searchSimilarEmbeddings(queryEmbedding, user.id, topK);
         const genAI = getGemini();
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `Based on the following search results, summarize the relevant information about "${query}":\n\n${results
             .map((r) => r.payload.text_chunk)
             .join("\n\n")}`;

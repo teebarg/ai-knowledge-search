@@ -1,7 +1,6 @@
-import { db } from "../db/index.js";
-import { embeddings as embeddingsTable, documents } from "../db/schema.js";
-import { eq, sql } from "drizzle-orm";
-import { embedTexts, EMBEDDING_DIM } from "./embeddings.js";
+import { db, pool } from "../db/index.js";
+import { embeddings as embeddingsTable } from "../db/schema.js";
+import { embedTexts } from "./embeddings.js";
 
 // Re-export for consistency
 export const generateEmbeddings = embedTexts;
@@ -44,30 +43,34 @@ export async function searchSimilarEmbeddings(
     userId: string,
     topK: number = 5
 ) {
-    // Convert embedding array to PostgreSQL vector format
+    // Convert embedding array to PostgreSQL vector format string
+    // Format: [0.1,0.2,0.3,...] - pgvector expects this format
     const vectorStr = `[${queryEmbedding.join(",")}]`;
     
-    // Use pgvector's cosine distance operator (<=>)
-    // The query returns results ordered by similarity (lower distance = more similar)
-    // Cosine similarity = 1 - cosine distance
-    const results = await db
-        .select({
-            id: embeddingsTable.id,
-            documentId: embeddingsTable.documentId,
-            chunkIndex: embeddingsTable.chunkIndex,
-            textChunk: embeddingsTable.textChunk,
-            similarity: sql<number>`1 - (${sql.raw(vectorStr)}::vector <=> ${embeddingsTable.embedding})`.as("similarity"),
-            documentTitle: documents.title,
-        })
-        .from(embeddingsTable)
-        .innerJoin(documents, eq(embeddingsTable.documentId, documents.id))
-        .where(eq(embeddingsTable.userId, userId))
-        .orderBy(sql`${embeddingsTable.embedding} <=> ${sql.raw(vectorStr)}::vector`)
-        .limit(topK);
-
-    return results.map((r) => ({
+    // Use raw SQL query with pgvector cosine distance operator (<=>)
+    // We use the pool directly for better control over the query
+    // The vector needs to be cast as ::vector type for pgvector to work
+    const query = `
+        SELECT 
+            e.id,
+            e.document_id as "documentId",
+            e.chunk_index as "chunkIndex",
+            e.text_chunk as "textChunk",
+            1 - ($1::vector <=> e.embedding) as similarity,
+            d.title as "documentTitle"
+        FROM embeddings e
+        INNER JOIN documents d ON e.document_id = d.id
+        WHERE e.user_id = $2
+        ORDER BY e.embedding <=> $1::vector
+        LIMIT $3
+    `;
+    
+    // Execute the query using the pool directly with parameterized query
+    const result = await pool.query(query, [vectorStr, userId, topK]);
+    
+    return result.rows.map((r: any) => ({
         id: r.id,
-        score: r.similarity || 0,
+        score: parseFloat(r.similarity) || 0,
         payload: {
             user_id: userId,
             title: r.documentTitle || "Unknown",
