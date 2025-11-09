@@ -329,7 +329,14 @@ app.openapi(searchRoute, async (c) => {
         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
         const prompt = `Based on the following search results, summarize the relevant information about "${query}":\n\n${results
             .map((r) => r.payload.text_chunk)
-            .join("\n\n")}`;
+            .join("\n\n")}
+
+            Please format your response in Markdown with:
+            - Use ## for section headers
+            - Use * or - for bullet points
+            - Use proper indentation for nested lists
+            - Use **bold** for emphasis
+            `;
         const result = await model.generateContent(prompt);
         const summary = result.response.text();
 

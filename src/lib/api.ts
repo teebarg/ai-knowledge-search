@@ -23,11 +23,11 @@ async function getAuthHeaders(): Promise<HeadersInit> {
     const headers: HeadersInit = {
         "Content-Type": "application/json",
     };
-    
+
     if (token) {
         headers["Authorization"] = `Bearer ${token}`;
     }
-    
+
     return headers;
 }
 
@@ -43,6 +43,8 @@ export interface SearchResult {
 
 export interface SearchResponse {
     results: SearchResult[];
+    summary: string;
+    query: string;
 }
 
 export interface UploadResponse {
@@ -108,7 +110,7 @@ export async function searchKnowledge(
     topK: number = 5
 ): Promise<SearchResponse> {
     const headers = await getAuthHeaders();
-    
+
     const response = await fetch(`${API_BASE_URL}/v1/search`, {
         method: "POST",
         headers,
@@ -135,7 +137,7 @@ export async function chatWithKnowledge(
 ): Promise<void> {
     try {
         const headers = await getAuthHeaders();
-        
+
         const response = await fetch(`${API_BASE_URL}/v1/chat`, {
             method: "POST",
             headers,
