@@ -5,14 +5,14 @@ import { createClient } from "@supabase/supabase-js";
 /**
  * Supabase client for JWT verification
  */
-function getSupabaseForAuth() {    
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
-    
+function getSupabaseForAuth() {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+
     if (!supabaseUrl || !supabaseAnonKey) {
         throw new Error("SUPABASE_URL and SUPABASE_ANON_KEY must be set for authentication");
     }
-    
+
     return createClient(supabaseUrl, supabaseAnonKey, {
         auth: {
             persistSession: false,
@@ -27,7 +27,7 @@ function getSupabaseForAuth() {
 function extractToken(c: Context): string | null {
     const authHeader = c.req.header("Authorization");
     if (!authHeader) return null;
-    
+
     // Support both "Bearer <token>" and just "<token>"
     if (authHeader.startsWith("Bearer ")) {
         return authHeader.substring(7);
@@ -38,17 +38,17 @@ function extractToken(c: Context): string | null {
 /**
  * Authentication middleware for Hono
  * Verifies Supabase JWT token and adds user info to context
- * 
+ *
  * Usage:
  * app.use("/v1/*", authMiddleware);
- * 
+ *
  * Or for specific routes:
  * app.post("/v1/upload", authMiddleware, async (c) => { ... });
  */
 export async function authMiddleware(c: Context, next: Next) {
     try {
         const token = extractToken(c);
-        
+
         if (!token) {
             throw new HTTPException(401, {
                 message: "Authorization token required",
@@ -56,7 +56,7 @@ export async function authMiddleware(c: Context, next: Next) {
         }
 
         const supabase = getSupabaseForAuth();
-        
+
         // Verify the JWT token
         const { data: { user }, error } = await supabase.auth.getUser(token);
 
@@ -78,7 +78,7 @@ export async function authMiddleware(c: Context, next: Next) {
         if (error instanceof HTTPException) {
             throw error;
         }
-        
+
         console.error("Auth middleware error:", error);
         throw new HTTPException(401, {
             message: "Authentication failed",
@@ -94,7 +94,7 @@ export async function authMiddleware(c: Context, next: Next) {
 export async function optionalAuthMiddleware(c: Context, next: Next) {
     try {
         const token = extractToken(c);
-        
+
         if (token) {
             const supabase = getSupabaseForAuth();
             const { data: { user }, error } = await supabase.auth.getUser(token);

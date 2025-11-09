@@ -13,100 +13,94 @@ export const SuccessSchema = z.object({
 
 // Upload schemas
 export const UploadRequestSchema = z.object({
-    file: z.any()
-        .optional()
-        .openapi({ 
-            type: 'string', 
-            format: 'binary',
-            description: "File to upload (PDF, TXT, MD)" 
-        }),
-    text: z.string()
-        .optional()
-        .openapi({ 
-            description: "Text content to upload",
-            example: "This is the content to be processed" 
-        }),
-    title: z.string()
-        .optional()
-        .openapi({ 
-            description: "Document title",
-            example: "My Document" 
-        }),
+    file: z.any().optional().openapi({
+        type: "string",
+        format: "binary",
+        description: "File to upload (PDF, TXT, MD)",
+    }),
+    text: z.string().optional().openapi({
+        description: "Text content to upload",
+        example: "This is the content to be processed",
+    }),
+    title: z.string().optional().openapi({
+        description: "Document title",
+        example: "My Document",
+    }),
 });
 
 export const UploadResponseSchema = z.object({
-    ok: z.boolean().openapi({ 
+    ok: z.boolean().openapi({
         description: "Whether the upload was successful",
-        example: true 
+        example: true,
     }),
-    documentId: z.string().openapi({ 
+    documentId: z.string().openapi({
         description: "The ID of the uploaded document",
-        example: "doc_123abc" 
+        example: "doc_123abc",
     }),
-    chunks: z.number().openapi({ 
+    chunks: z.number().openapi({
         description: "Number of chunks the document was split into",
-        example: 5 
+        example: 5,
     }),
 });
 
 // Search schemas
 export const SearchResultPayloadSchema = z.object({
-    user_id: z.string().openapi({ 
+    user_id: z.string().openapi({
         description: "ID of the user who owns the document",
-        example: "user_123" 
+        example: "user_123",
     }),
-    title: z.string().openapi({ 
+    title: z.string().openapi({
         description: "Title of the document",
-        example: "Getting Started Guide" 
+        example: "Getting Started Guide",
     }),
-    text_chunk: z.string().openapi({ 
+    text_chunk: z.string().openapi({
         description: "Text content of the chunk",
-        example: "This is a section of the document..." 
+        example: "This is a section of the document...",
     }),
-    document_id: z.string().optional().openapi({ 
+    document_id: z.string().optional().openapi({
         description: "ID of the document",
-        example: "doc_456" 
+        example: "doc_456",
     }),
-    chunk_index: z.number().optional().openapi({ 
+    chunk_index: z.number().optional().openapi({
         description: "Index of the chunk within the document",
-        example: 2 
+        example: 2,
     }),
 });
 
 export const SearchResultSchema = z.object({
-    id: z.string().openapi({ 
+    id: z.string().openapi({
         description: "ID of the search result",
-        example: "result_789" 
+        example: "result_789",
     }),
-    score: z.number().openapi({ 
+    score: z.number().openapi({
         description: "Similarity score of the result",
-        example: 0.95 
+        example: 0.95,
     }),
     payload: SearchResultPayloadSchema,
 });
 
 export const SearchResponseSchema = z.object({
     results: z.array(SearchResultSchema).openapi({
-        description: "List of search results"
+        description: "List of search results",
     }),
-    summary: z.string().openapi({ 
+    summary: z.string().openapi({
         description: "AI-generated summary of the results",
-        example: "The documents discuss various aspects of..." 
+        example: "The documents discuss various aspects of...",
     }),
-    query: z.string().openapi({ 
+    query: z.string().openapi({
         description: "Original search query",
-        example: "machine learning basics" 
+        example: "machine learning basics",
     }),
 });
 
 export const SearchRequestSchema = z.object({
-    query: z.string().min(1).openapi({ 
+    query: z.string().min(1).openapi({
         description: "Search query",
-        example: "machine learning basics" 
+        example: "machine learning basics",
     }),
-    topK: z.number().optional().default(5).openapi({ 
+    topK: z.number().optional().default(5).openapi({
         description: "Number of results to return",
-        example: 5 
+        example: 5,
     }),
 });
 
@@ -137,8 +131,8 @@ export const DocumentsResponseSchema = z.object({
 
 // Health response schema
 export const HealthResponseSchema = z.object({
-  message: z.string().openapi({
-    example: "Server is running",
-    description: "Status message from the server",
-  }),
+    message: z.string().openapi({
+        example: "Server is running",
+        description: "Status message from the server",
+    }),
 });

@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
     "dev:web": "vite dev",
-    "dev:api": "node --require dotenv/config --import tsx src/api/index.ts",
+    "dev:api": "tsx watch src/api/index.ts",
     "build": "vite build && tsup src/server/index.ts --format esm --out-dir dist/server",
     "start": "vite start",
     "db:generate": "drizzle-kit generate",
