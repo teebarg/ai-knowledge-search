@@ -4,8 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, FileText, Loader2 } from "lucide-react";
-import { useState } from "react";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { chatWithKnowledge } from "@/lib/api";
 import { toast } from "sonner";
 import MarkdownUI from "~/components/ui/markdown";
@@ -33,6 +32,28 @@ function RouteComponent() {
                 "Hi! I'm your AI assistant. Ask me anything about your documents and I'll help you find answers with citations from your knowledge base.",
         },
     ]);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+    const scrollToBottomInstant = () => {
+        const container = messagesContainerRef.current;
+        if (container) {
+            container.scrollTop = container.scrollHeight;
+        }
+    };
+
+    const scrollToBottom = () => {
+        requestAnimationFrame(() => {
+            scrollToBottomInstant();
+        });
+    };
+
+    useLayoutEffect(() => {
+        scrollToBottomInstant();
+    }, [messages]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, []);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -47,6 +68,10 @@ function RouteComponent() {
         setMessages((prev) => [...prev, userMessage]);
         setInput("");
         setIsLoading(true);
+
+        requestAnimationFrame(() => {
+            requestAnimationFrame(scrollToBottomInstant);
+        });
 
         // Create a placeholder assistant message that we'll update with streaming content
         const assistantMessageId = (Date.now() + 1).toString();
@@ -65,6 +90,9 @@ function RouteComponent() {
                 (chunk) => {
                     fullResponse += chunk;
                     setMessages((prev) => prev.map((msg) => (msg.id === assistantMessageId ? { ...msg, content: fullResponse } : msg)));
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(scrollToBottomInstant);
+                    });
                 },
                 (error) => {
                     toast.error("Failed to get response: " + error.message);
@@ -104,8 +132,8 @@ function RouteComponent() {
                 <p className="text-muted-foreground">Have a conversation about your documents with AI-powered insights</p>
             </div>
 
-            <Card className="flex-1 flex flex-col p-0 overflow-hidden">
-                <ScrollArea className="flex-1 p-6">
+            <Card className="flex-1 flex flex-col p-0 overflow-hidden min-h-0">
+                <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 min-h-0">
                     <div className="space-y-6">
                         {messages.map((message) => (
                             <div key={message.id} className={`flex gap-4 ${message.role === "user" ? "flex-row-reverse" : ""}`}>
@@ -144,7 +172,7 @@ function RouteComponent() {
                             </div>
                         ))}
                     </div>
-                </ScrollArea>
+                </div>
 
                 <div className="p-6 border-t border-border">
                     <div className="flex gap-2">
