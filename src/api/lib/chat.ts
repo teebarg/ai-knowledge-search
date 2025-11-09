@@ -28,6 +28,13 @@ Use ONLY the information from the context below to answer the question.
 If the context doesn't contain enough information to answer the question, say so.
 Always cite the source document title when providing information.
 
+Format your response using proper Markdown syntax:
+- Use headers (##, ###) for sections
+- Use bullet points (- or *) for lists, not Unicode characters like ● or ○
+- Use proper line breaks between paragraphs
+- Use code blocks (\`\`\`) for code examples
+- Use **bold** for emphasis
+
 Context:
 ${contextText}
 
@@ -37,7 +44,7 @@ Answer:`;
 
     // Get Gemini model and stream response
     const genAI = getGemini();
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const streaming = await model.generateContentStream({
         contents: [{ role: "user", parts: [{ text: prompt }] }],
     });

@@ -6,6 +6,8 @@ import { Search, Sparkles, FileText, ExternalLink, Loader2 } from "lucide-react"
 import { useState } from "react";
 import { searchKnowledge } from "@/lib/api";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 export const Route = createFileRoute("/_protected/account/search")({
     component: RouteComponent,
@@ -17,6 +19,7 @@ function RouteComponent() {
     const [hasSearched, setHasSearched] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [answer, setAnswer] = useState<string>("");
+    console.log("🚀 ~ file: search.tsx:24 ~ answer:", answer)
     const [citations, setCitations] = useState<Array<{ title: string; page?: string }>>([]);
 
     const handleSearch = async () => {
@@ -100,7 +103,13 @@ function RouteComponent() {
                                             <span>Searching your knowledge base...</span>
                                         </div>
                                     ) : answer ? (
-                                        <p className="text-foreground leading-relaxed whitespace-pre-wrap">{answer}</p>
+                                        <div className="text-sm prose">
+                                            <ReactMarkdown
+                                                remarkPlugins={[remarkGfm]}
+                                            >
+                                                {answer}
+                                            </ReactMarkdown>
+                                        </div>
                                     ) : (
                                         <p className="text-muted-foreground">Enter a query above to search your documents.</p>
                                     )}
