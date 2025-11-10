@@ -9,6 +9,7 @@ import { User, Key, Brain, LogOut } from "lucide-react";
 import { logoutFn } from "~/lib/auth-server";
 import { toast } from "sonner";
 import { useState } from "react";
+import { Switch } from "~/components/ui/switch";
 
 export const Route = createFileRoute("/_protected/account/settings")({
     component: RouteComponent,
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_protected/account/settings")({
 function RouteComponent() {
     const navigate = useNavigate();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
+    const [useOwnKey, setUseOwnKey] = useState(false);
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -61,15 +63,31 @@ function RouteComponent() {
                     <Key className="h-5 w-5 text-primary" />
                     <h2 className="text-xl font-semibold">API Keys</h2>
                 </div>
-                <div className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="api-key">API Key</Label>
-                        <div className="flex gap-2">
-                            <Input id="api-key" type="password" placeholder="sk-••••••••••••••••" className="flex-1" />
-                            <Button variant="outline">Regenerate</Button>
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="use-own-key" className="text-base">
+                                Use Your Own API Key
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                                {useOwnKey
+                                    ? "Using your personal API key with no throttling"
+                                    : "Using default key (rate limited to 10 requests/hour)"}
+                            </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">Use this key to access your knowledge base via API</p>
+                        <Switch id="use-own-key" checked={useOwnKey} onCheckedChange={setUseOwnKey} />
                     </div>
+
+                    {useOwnKey && (
+                        <div className="space-y-2 animate-fade-in">
+                            <Label htmlFor="api-key">Your API Key</Label>
+                            <div className="flex gap-2">
+                                <Input id="api-key" type="password" placeholder="sk-••••••••••••••••" className="flex-1" />
+                                <Button variant="outline">Save</Button>
+                            </div>
+                            <p className="text-xs text-muted-foreground">Your API key is encrypted and stored securely</p>
+                        </div>
+                    )}
                 </div>
             </Card>
 
