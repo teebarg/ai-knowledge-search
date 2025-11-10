@@ -56,7 +56,7 @@ function RouteComponent() {
     };
 
     return (
-        <div className="max-w-5xl mx-auto space-y-8 animate-fade-in">
+        <div className="max-w-6xl mx-auto space-y-8 animate-fade-in">
             <div className="text-center">
                 <h1 className="text-3xl font-bold mb-2">AI-Powered Search</h1>
                 <p className="text-muted-foreground">Ask anything about your documents in natural language</p>
@@ -80,7 +80,7 @@ function RouteComponent() {
             {hasSearched && (
                 <div className="grid lg:grid-cols-3 gap-6 animate-fade-up">
                     <div className="lg:col-span-2 space-y-6">
-                        <Card className="p-8 border-2">
+                        <Card className="p-8 border-2 max-h-[calc(100vh-20rem)] overflow-y-auto">
                             <div className="flex items-start gap-3 mb-4">
                                 <div className="h-8 w-8 rounded-lg bg-gradient-primary flex items-center justify-center shrink-0">
                                     <Sparkles className="h-4 w-4 text-primary-foreground" />

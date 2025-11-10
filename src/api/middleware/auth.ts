@@ -41,9 +41,6 @@ function extractToken(c: Context): string | null {
  *
  * Usage:
  * app.use("/v1/*", authMiddleware);
- *
- * Or for specific routes:
- * app.post("/v1/upload", authMiddleware, async (c) => { ... });
  */
 export async function authMiddleware(c: Context, next: Next) {
     try {
@@ -56,9 +53,10 @@ export async function authMiddleware(c: Context, next: Next) {
         }
 
         const supabase = getSupabaseForAuth();
-
-        // Verify the JWT token
-        const { data: { user }, error } = await supabase.auth.getUser(token);
+        const {
+            data: { user },
+            error,
+        } = await supabase.auth.getUser(token);
 
         if (error || !user) {
             throw new HTTPException(401, {
@@ -66,7 +64,6 @@ export async function authMiddleware(c: Context, next: Next) {
             });
         }
 
-        // Add user info to context
         c.set("user", {
             id: user.id,
             email: user.email,
@@ -89,7 +86,6 @@ export async function authMiddleware(c: Context, next: Next) {
 /**
  * Optional authentication middleware
  * Adds user to context if token is present, but doesn't require it
- * Useful for routes that work with or without authentication
  */
 export async function optionalAuthMiddleware(c: Context, next: Next) {
     try {
@@ -97,7 +93,10 @@ export async function optionalAuthMiddleware(c: Context, next: Next) {
 
         if (token) {
             const supabase = getSupabaseForAuth();
-            const { data: { user }, error } = await supabase.auth.getUser(token);
+            const {
+                data: { user },
+                error,
+            } = await supabase.auth.getUser(token);
 
             if (!error && user) {
                 c.set("user", {
@@ -139,4 +138,3 @@ export type AuthenticatedContext = Context & {
         user_metadata?: Record<string, any>;
     };
 };
-
