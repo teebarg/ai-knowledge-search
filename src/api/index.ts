@@ -10,6 +10,8 @@ import { documentRoutes } from "@/api/routes/document.routes";
 import { searchRoutes } from "@/api/routes/search.routes";
 import { chatRoutes } from "@/api/routes/chat.routes";
 import { conversationRoutes } from "@/api/routes/conversation.routes";
+import { settingsRoutes } from "@/api/routes/settings.routes";
+import { profileRoutes } from "@/api/routes/profile.routes";
 
 const port = Number(process.env.PORT || 8787);
 
@@ -27,6 +29,8 @@ app.route("/v1", documentRoutes);
 app.route("/v1", searchRoutes);
 app.route("/v1", chatRoutes);
 app.route("/v1", conversationRoutes);
+app.route("/v1", settingsRoutes);
+app.route("/v1", profileRoutes);
 
 // OpenAPI documentation
 app.doc("/doc", {

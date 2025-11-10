@@ -1,6 +1,9 @@
 import { Context, Next } from "hono";
 import { HTTPException } from "hono/http-exception";
 import { createClient } from "@supabase/supabase-js";
+import { db } from "@/api/db";
+import { users } from "@/api/db/schema";
+import { eq } from "drizzle-orm";
 
 /**
  * Supabase client for JWT verification
@@ -61,6 +64,20 @@ export async function authMiddleware(c: Context, next: Next) {
         if (error || !user) {
             throw new HTTPException(401, {
                 message: "Invalid or expired token",
+            });
+        }
+
+
+        // Ensure user exists in local DB
+        const dbUser = await db.select().from(users).where(eq(users.id, user.id));
+        if (!dbUser[0]) {
+            console.log("User not found in local DB")
+            // Use name from user_metadata or email prefix
+            let name = user.user_metadata?.name || user.email?.split("@")[0] || "User";
+            await db.insert(users).values({
+                id: user.id,
+                name,
+                email: user.email,
             });
         }
 

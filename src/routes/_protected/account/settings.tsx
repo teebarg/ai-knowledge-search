@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { User, Key, Brain, LogOut } from "lucide-react";
 import { logoutFn } from "~/lib/auth-server";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Switch } from "~/components/ui/switch";
+import { getSettings, updateSettings, type Settings } from "~/lib/settings";
+import { getProfile, updateProfile, type UserProfile } from "~/lib/profile";
 
 export const Route = createFileRoute("/_protected/account/settings")({
     component: RouteComponent,
@@ -18,7 +20,82 @@ export const Route = createFileRoute("/_protected/account/settings")({
 function RouteComponent() {
     const navigate = useNavigate();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const [useOwnKey, setUseOwnKey] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [settings, setSettings] = useState<Settings>({
+        useOwnKey: false,
+        preferredModel: "gemini",
+    });
+    const [profile, setProfile] = useState<UserProfile | null>(null);
+    const [apiKey, setApiKey] = useState("");
+
+    // Load settings on mount
+    useEffect(() => {
+        const loadAll = async () => {
+            try {
+                const [settingsData, profileData] = await Promise.all([getSettings(), getProfile()]);
+                setSettings(settingsData);
+                setProfile(profileData);
+                if (settingsData.apiKey) {
+                    setApiKey("********");
+                }
+            } catch (error) {
+                const message = error instanceof Error ? error.message : "Failed to load settings";
+                toast.error(message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadAll();
+    }, []);
+
+    const handleSaveProfile = async () => {
+        if (!profile) return;
+        try {
+            const updatedProfile = await updateProfile({ name: profile.name });
+            setProfile(updatedProfile);
+            toast.success("Profile saved");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to save profile";
+            toast.error(message);
+        }
+    };
+
+    const handleApiKeyChange = (value: boolean) => {
+        setSettings((prev) => ({ ...prev, useOwnKey: value }));
+        if (!value) {
+            setApiKey("");
+            handleSaveApiKey("");
+        }
+    };
+
+    const handleSaveApiKey = async (key: string = apiKey) => {
+        try {
+            const updatedSettings = await updateSettings({
+                apiKey: key,
+                useOwnKey: Boolean(key),
+            });
+            setSettings(updatedSettings);
+            if (key) {
+                toast.success("API key saved");
+            } else {
+                toast.success("API key removed");
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to save API key";
+            toast.error(message);
+        }
+    };
+
+    const handleModelChange = async (model: string) => {
+        try {
+            const updatedSettings = await updateSettings({ preferredModel: model });
+            setSettings(updatedSettings);
+            toast.success("Model preference saved");
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "Failed to save model preference";
+            toast.error(message);
+        }
+    };
 
     const handleLogout = async () => {
         setIsLoggingOut(true);
@@ -33,6 +110,11 @@ function RouteComponent() {
             setIsLoggingOut(false);
         }
     };
+
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+
     return (
         <div className="max-w-3xl space-y-8 animate-fade-in">
             <div>
@@ -48,13 +130,18 @@ function RouteComponent() {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="name">Full Name</Label>
-                        <Input id="name" placeholder="John Doe" />
+                        <Input
+                            id="name"
+                            placeholder="John Doe"
+                            value={profile?.name || ""}
+                            onChange={(e) => setProfile((prev) => (prev ? { ...prev, name: e.target.value } : null))}
+                        />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" placeholder="you@example.com" />
+                        <Input id="email" type="email" placeholder="you@example.com" readOnly value={profile?.email || ""} />
                     </div>
-                    <Button>Save Changes</Button>
+                    <Button onClick={handleSaveProfile}>Save Changes</Button>
                 </div>
             </Card>
 
@@ -70,20 +157,29 @@ function RouteComponent() {
                                 Use Your Own API Key
                             </Label>
                             <p className="text-sm text-muted-foreground">
-                                {useOwnKey
+                                {settings.useOwnKey
                                     ? "Using your personal API key with no throttling"
                                     : "Using default key (rate limited to 10 requests/hour)"}
                             </p>
                         </div>
-                        <Switch id="use-own-key" checked={useOwnKey} onCheckedChange={setUseOwnKey} />
+                        <Switch id="use-own-key" checked={settings.useOwnKey} onCheckedChange={handleApiKeyChange} />
                     </div>
 
-                    {useOwnKey && (
+                    {settings.useOwnKey && (
                         <div className="space-y-2 animate-fade-in">
                             <Label htmlFor="api-key">Your API Key</Label>
                             <div className="flex gap-2">
-                                <Input id="api-key" type="password" placeholder="sk-••••••••••••••••" className="flex-1" />
-                                <Button variant="outline">Save</Button>
+                                <Input
+                                    id="api-key"
+                                    type="password"
+                                    placeholder="sk-••••••••••••••••"
+                                    className="flex-1"
+                                    value={apiKey}
+                                    onChange={(e) => setApiKey(e.target.value)}
+                                />
+                                <Button variant="outline" onClick={() => handleSaveApiKey()}>
+                                    Save
+                                </Button>
                             </div>
                             <p className="text-xs text-muted-foreground">Your API key is encrypted and stored securely</p>
                         </div>
@@ -99,7 +195,7 @@ function RouteComponent() {
                 <div className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="model">Preferred AI Model</Label>
-                        <Select defaultValue="gemini">
+                        <Select value={settings.preferredModel} onValueChange={handleModelChange}>
                             <SelectTrigger id="model">
                                 <SelectValue />
                             </SelectTrigger>
