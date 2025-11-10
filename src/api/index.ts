@@ -6,8 +6,8 @@ import { prettyJSON } from "hono/pretty-json";
 import { extractTextFromPdf } from "./lib/pdf.js";
 import { chunkText } from "./lib/text.js";
 import { db } from "./db/index.js";
-import { documents } from "./db/schema.js";
-import { eq, desc } from "drizzle-orm";
+import { documents, conversations, conversationMessages } from "./db/schema.js";
+import { eq, desc, and } from "drizzle-orm";
 import { embedAndStore } from "./lib/embeddings-pgvector.js";
 import { searchSimilarEmbeddings, generateEmbeddings } from "./lib/embeddings-pgvector.js";
 import { chatWithKnowledge } from "./lib/chat.js";
@@ -469,6 +469,188 @@ app.openapi(documentsRoute, async (c) => {
         return c.json(errorResponse, 500);
     }
 });
+
+// Conversations API
+const ConversationSchema = z.object({
+    id: z.string(),
+    title: z.string(),
+    created_at: z.string(),
+    updated_at: z.string(),
+});
+
+const ConversationsResponseSchema = z.object({
+    conversations: z.array(ConversationSchema),
+});
+
+const CreateConversationRequestSchema = z.object({
+    title: z.string().min(1),
+});
+
+const MessagesResponseSchema = z.object({
+    messages: z.array(
+        z.object({
+            id: z.string(),
+            role: z.enum(["user", "assistant"]),
+            content: z.string(),
+            created_at: z.string(),
+        })
+    ),
+});
+
+// List conversations
+app.openapi(
+    createRoute({
+        method: "get",
+        path: "/v1/conversations",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        responses: {
+            200: { description: "OK", content: { "application/json": { schema: ConversationsResponseSchema } } },
+        },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const rows = await db
+            .select()
+            .from(conversations)
+            .where(eq(conversations.userId, user.id))
+            .orderBy(desc(conversations.updatedAt));
+        return c.json({
+            conversations: rows.map((r) => ({
+                id: r.id,
+                title: r.title,
+                created_at: r.createdAt.toISOString(),
+                updated_at: r.updatedAt.toISOString(),
+            })),
+        });
+    }
+);
+
+// Create conversation
+app.openapi(
+    createRoute({
+        method: "post",
+        path: "/v1/conversations",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        request: { body: { content: { "application/json": { schema: CreateConversationRequestSchema } } } },
+        responses: {
+            200: { description: "OK", content: { "application/json": { schema: ConversationSchema } } },
+        },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const { title } = await c.req.json<z.infer<typeof CreateConversationRequestSchema>>();
+        const id = crypto.randomUUID();
+        const now = new Date();
+        await db.insert(conversations).values({ id, userId: user.id, title, createdAt: now, updatedAt: now });
+        return c.json({ id, title, created_at: now.toISOString(), updated_at: now.toISOString() });
+    }
+);
+
+// Delete conversation
+app.openapi(
+    createRoute({
+        method: "delete",
+        path: "/v1/conversations/{id}",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        request: { params: z.object({ id: z.string() }) },
+        responses: { 200: { description: "OK", content: { "application/json": { schema: HealthCheckSchema } } } },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const { id } = c.req.param();
+        // Ensure conversation belongs to user, then delete
+        const owned = await db.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        if (!owned.length) {
+            return c.json({ message: "Not found" }, 404);
+        }
+        await db.delete(conversations).where(eq(conversations.id, id));
+        return c.json({ message: "Deleted" }, 200);
+    }
+);
+
+// List messages in a conversation
+app.openapi(
+    createRoute({
+        method: "get",
+        path: "/v1/conversations/{id}/messages",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        request: { params: z.object({ id: z.string() }) },
+        responses: {
+            200: { description: "OK", content: { "application/json": { schema: MessagesResponseSchema } } },
+        },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const { id } = c.req.param();
+        const owned = await db.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        if (!owned.length) {
+            return c.json({ error: "Not found", details: "Conversation not found" }, 404);
+        }
+        const rows = await db
+            .select()
+            .from(conversationMessages)
+            .where(and(eq(conversationMessages.conversationId, id), eq(conversationMessages.userId, user.id)))
+            .orderBy(conversationMessages.createdAt);
+        return c.json({
+            messages: rows.map((m) => ({
+                id: m.id,
+                role: (m.role as "user" | "assistant"),
+                content: m.content,
+                created_at: m.createdAt.toISOString(),
+            })),
+        });
+    }
+);
+
+// Append a message to a conversation
+app.openapi(
+    createRoute({
+        method: "post",
+        path: "/v1/conversations/{id}/messages",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        request: {
+            params: z.object({ id: z.string() }),
+            body: {
+                content: {
+                    "application/json": {
+                        schema: z.object({
+                            role: z.enum(["user", "assistant"]),
+                            content: z.string().min(1),
+                        }),
+                    },
+                },
+            },
+        },
+        responses: {
+            200: { description: "OK", content: { "application/json": { schema: z.object({ id: z.string() }) } } },
+        },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const { id } = c.req.param();
+        const { role, content } = await c.req.json<{ role: "user" | "assistant"; content: string }>();
+        const owned = await db.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        if (!owned.length) {
+            return c.json({ error: "Not found", details: "Conversation not found" }, 404);
+        }
+        const messageId = crypto.randomUUID();
+        await db.insert(conversationMessages).values({
+            id: messageId,
+            conversationId: id,
+            userId: user.id,
+            role,
+            content,
+        });
+        // bump conversation updatedAt
+        await db.update(conversations).set({ updatedAt: new Date() }).where(eq(conversations.id, id));
+        return c.json({ id: messageId });
+    }
+);
 
 // Start the server in development mode
 if (process.env.NODE_ENV !== "production") {

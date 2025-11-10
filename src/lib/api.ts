@@ -64,6 +64,28 @@ export interface DocumentsResponse {
     documents: Document[];
 }
 
+export interface Conversation {
+    id: string;
+    title: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface ConversationsResponse {
+    conversations: Conversation[];
+}
+
+export interface ConversationMessage {
+    id: string;
+    role: "user" | "assistant";
+    content: string;
+    created_at: string;
+}
+
+export interface ConversationMessagesResponse {
+    messages: ConversationMessage[];
+}
+
 /**
  * Upload a document (file or text) to the knowledge base
  */
@@ -99,6 +121,75 @@ export async function uploadDocument(
         throw new Error(error.error || "Upload failed");
     }
 
+    return response.json();
+}
+
+/**
+ * Conversations
+ */
+export async function listConversations(): Promise<ConversationsResponse> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/v1/conversations`, {
+        method: "GET",
+        headers,
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to fetch conversations");
+    }
+    return response.json();
+}
+
+export async function createConversation(title: string): Promise<Conversation> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/v1/conversations`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ title }),
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to create conversation");
+    }
+    return response.json();
+}
+
+export async function deleteConversationApi(id: string): Promise<void> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${id}`, {
+        method: "DELETE",
+        headers,
+    });
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to delete conversation" }));
+        throw new Error(error.error || "Failed to delete conversation");
+    }
+}
+
+export async function listConversationMessages(id: string): Promise<ConversationMessagesResponse> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${id}/messages`, {
+        method: "GET",
+        headers,
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to fetch messages");
+    }
+    return response.json();
+}
+
+export async function appendConversationMessage(id: string, role: "user" | "assistant", content: string): Promise<{ id: string }> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${id}/messages`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ role, content }),
+    });
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to save message");
+    }
     return response.json();
 }
 
