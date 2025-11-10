@@ -47,6 +47,7 @@ const UploadErrorSchema = z.object({
 const SearchRequestSchema = z.object({
     query: z.string(),
     topK: z.number().optional().default(5),
+    conversationId: z.string().optional(),
 });
 
 const SearchResultSchema = z.object({
@@ -122,7 +123,6 @@ app.openapi(healthRoute, (c) => {
     });
 });
 
-// Swagger UI configuration
 app.doc("/doc", {
     openapi: "3.0.0",
     info: {
@@ -206,7 +206,6 @@ app.openapi(uploadRoute, async (c) => {
                 return c.json(errorResponse, 400);
             }
 
-            // Check file type
             if (!file.type || !file.type.includes("pdf")) {
                 const errorResponse: z.infer<typeof UploadErrorSchema> = {
                     error: "Invalid file type",
@@ -217,7 +216,6 @@ app.openapi(uploadRoute, async (c) => {
 
             title = title || file.name;
 
-            // Convert file to buffer
             const arrayBuffer = await file.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
             text = await extractTextFromPdf(buffer);
@@ -232,7 +230,6 @@ app.openapi(uploadRoute, async (c) => {
             return c.json(errorResponse, 400);
         }
 
-        // Generate chunks from the extracted text
         const textChunks = chunkText(text);
         if (!textChunks || textChunks.length === 0) {
             const errorResponse: z.infer<typeof UploadErrorSchema> = {
@@ -245,7 +242,6 @@ app.openapi(uploadRoute, async (c) => {
         const documentId = crypto.randomUUID();
         const now = new Date();
 
-        // Create the document record
         await db.insert(documents).values({
             id: documentId,
             title,
@@ -259,10 +255,8 @@ app.openapi(uploadRoute, async (c) => {
             updatedAt: now,
         });
 
-        // Store all chunks with their embeddings
         await embedAndStore(documentId, user.id, textChunks);
 
-        // Update document status to completed
         await db.update(documents).set({ status: "completed", updatedAt: new Date() }).where(eq(documents.id, documentId));
 
         const successResponse: z.infer<typeof UploadResponseSchema> = {
@@ -394,10 +388,26 @@ const chatRoute = createRoute({
 
 app.openapi(chatRoute, async (c) => {
     const user = await getAuthenticatedUser(c);
-    const { query, topK = 5 } = await c.req.json<z.infer<typeof SearchRequestSchema>>();
+    const { query, topK = 5, conversationId } = await c.req.json<z.infer<typeof SearchRequestSchema>>();
 
     try {
-        const stream = await chatWithKnowledge(query, user.id, topK);
+        let history: Array<{ role: "user" | "assistant"; content: string }> | undefined = undefined;
+        if (conversationId) {
+            const owned = await db
+                .select()
+                .from(conversations)
+                .where(and(eq(conversations.id, conversationId), eq(conversations.userId, user.id)));
+            if (owned.length) {
+                const rows = await db
+                    .select()
+                    .from(conversationMessages)
+                    .where(and(eq(conversationMessages.conversationId, conversationId), eq(conversationMessages.userId, user.id)))
+                    .orderBy(conversationMessages.createdAt);
+                history = rows.map((m) => ({ role: m.role as "user" | "assistant", content: m.content }));
+            }
+        }
+
+        const stream = await chatWithKnowledge(query, user.id, topK, history);
         return new Response(stream, {
             headers: {
                 "Content-Type": "text/event-stream",
@@ -445,12 +455,10 @@ app.openapi(documentsRoute, async (c) => {
     const user = await getAuthenticatedUser(c);
 
     try {
-        // Then try to fetch documents
         const userDocuments = await db.select().from(documents).where(eq(documents.userId, user.id)).orderBy(desc(documents.createdAt));
 
         console.log(`Found ${userDocuments.length} documents for user`);
 
-        // Transform to match frontend expectations (snake_case and wrapped in documents object)
         const formattedDocs = userDocuments.map((doc) => ({
             id: doc.id,
             user_id: doc.userId,
@@ -497,6 +505,142 @@ const MessagesResponseSchema = z.object({
     ),
 });
 
+// Update conversation title
+app.openapi(
+    createRoute({
+        method: "patch",
+        path: "/v1/conversations/{id}",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        request: {
+            params: z.object({ id: z.string() }),
+            body: { content: { "application/json": { schema: z.object({ id: z.string(), title: z.string().min(1) }) } } },
+        },
+        responses: {
+            200: { description: "OK", content: { "application/json": { schema: ConversationSchema } } },
+            400: {
+                description: "Server error",
+                content: {
+                    "application/json": {
+                        schema: ErrorSchema,
+                    },
+                },
+            },
+        },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const { id } = c.req.param();
+        const { title } = await c.req.json<{ title: string }>();
+        const owned = await db
+            .select()
+            .from(conversations)
+            .where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        if (!owned.length) {
+            return c.json({ error: "Not found", details: "Conversation not found" }, 400);
+        }
+        const now = new Date();
+        await db.update(conversations).set({ title, updatedAt: now }).where(eq(conversations.id, id));
+        return c.json({ id, title, created_at: owned[0].createdAt.toISOString(), updated_at: now.toISOString() });
+    }
+);
+
+// Generate concise conversation title (background)
+app.openapi(
+    createRoute({
+        method: "post",
+        path: "/v1/conversations/{id}/generate-title",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        request: { params: z.object({ id: z.string() }) },
+        responses: {
+            200: { description: "OK", content: { "application/json": { schema: ConversationSchema } } },
+        },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const { id } = c.req.param();
+
+        const owned = await db
+            .select()
+            .from(conversations)
+            .where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        if (!owned.length) {
+            return c.json({ error: "Not found", details: "Conversation not found" }, 404);
+        }
+
+        const msgs = await db
+            .select()
+            .from(conversationMessages)
+            .where(and(eq(conversationMessages.conversationId, id), eq(conversationMessages.userId, user.id)))
+            .orderBy(conversationMessages.createdAt);
+
+        // Build a short summary of context for title generation
+        const recent = msgs.slice(-6);
+        const convoText = recent
+            .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+            .join("\n")
+            .slice(0, 2000);
+
+        const genAI = getGemini();
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const prompt = `Generate a very concise, human-friendly title (max 6 words) for the conversation below.
+- No trailing punctuation.
+- Title case where appropriate.
+- Do not include quotes.
+
+Conversation:
+${convoText}`;
+        const result = await model.generateContent(prompt);
+        const raw = (result.response.text() || "").trim();
+        const title =
+            raw
+                .replace(/^["'“”]+|["'“”]+$/g, "")
+                .replace(/[.?!\s]+$/g, "")
+                .slice(0, 80) || "Conversation";
+
+        const now = new Date();
+        await db.update(conversations).set({ title, updatedAt: now }).where(eq(conversations.id, id));
+        return c.json({ id, title, created_at: owned[0].createdAt.toISOString(), updated_at: now.toISOString() });
+    }
+);
+
+// Update message content (for streaming)
+app.openapi(
+    createRoute({
+        method: "patch",
+        path: "/v1/conversations/{id}/messages/{messageId}",
+        security: [{ Bearer: [] }],
+        tags: ["conversations"],
+        request: {
+            params: z.object({ id: z.string(), messageId: z.string() }),
+            body: { content: { "application/json": { schema: z.object({ content: z.string().min(0) }) } } },
+        },
+        responses: {
+            200: { description: "OK", content: { "application/json": { schema: z.object({ ok: z.boolean() }) } } },
+        },
+    }),
+    async (c) => {
+        const user = await getAuthenticatedUser(c);
+        const { id, messageId } = c.req.param();
+        // Verify ownership
+        const owned = await db
+            .select()
+            .from(conversations)
+            .where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        if (!owned.length) {
+            return c.json({ error: "Not found", details: "Conversation not found" }, 404);
+        }
+        const { content } = await c.req.json<{ content: string }>();
+        await db
+            .update(conversationMessages)
+            .set({ content })
+            .where(
+                and(eq(conversationMessages.id, messageId), eq(conversationMessages.conversationId, id), eq(conversationMessages.userId, user.id))
+            );
+        return c.json({ ok: true });
+    }
+);
 // List conversations
 app.openapi(
     createRoute({
@@ -510,11 +654,7 @@ app.openapi(
     }),
     async (c) => {
         const user = await getAuthenticatedUser(c);
-        const rows = await db
-            .select()
-            .from(conversations)
-            .where(eq(conversations.userId, user.id))
-            .orderBy(desc(conversations.updatedAt));
+        const rows = await db.select().from(conversations).where(eq(conversations.userId, user.id)).orderBy(desc(conversations.updatedAt));
         return c.json({
             conversations: rows.map((r) => ({
                 id: r.id,
@@ -562,7 +702,10 @@ app.openapi(
         const user = await getAuthenticatedUser(c);
         const { id } = c.req.param();
         // Ensure conversation belongs to user, then delete
-        const owned = await db.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        const owned = await db
+            .select()
+            .from(conversations)
+            .where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
         if (!owned.length) {
             return c.json({ message: "Not found" }, 404);
         }
@@ -586,7 +729,10 @@ app.openapi(
     async (c) => {
         const user = await getAuthenticatedUser(c);
         const { id } = c.req.param();
-        const owned = await db.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        const owned = await db
+            .select()
+            .from(conversations)
+            .where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
         if (!owned.length) {
             return c.json({ error: "Not found", details: "Conversation not found" }, 404);
         }
@@ -598,7 +744,7 @@ app.openapi(
         return c.json({
             messages: rows.map((m) => ({
                 id: m.id,
-                role: (m.role as "user" | "assistant"),
+                role: m.role as "user" | "assistant",
                 content: m.content,
                 created_at: m.createdAt.toISOString(),
             })),
@@ -634,7 +780,10 @@ app.openapi(
         const user = await getAuthenticatedUser(c);
         const { id } = c.req.param();
         const { role, content } = await c.req.json<{ role: "user" | "assistant"; content: string }>();
-        const owned = await db.select().from(conversations).where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
+        const owned = await db
+            .select()
+            .from(conversations)
+            .where(and(eq(conversations.id, id), eq(conversations.userId, user.id)));
         if (!owned.length) {
             return c.json({ error: "Not found", details: "Conversation not found" }, 404);
         }

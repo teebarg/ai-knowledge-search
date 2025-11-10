@@ -9,45 +9,58 @@ import { embedTexts } from "./embeddings.js";
 export async function chatWithKnowledge(
     query: string,
     userId: string,
-    topK: number = 5
+    topK: number = 5,
+    history?: Array<{ role: "user" | "assistant"; content: string }>
 ): Promise<ReadableStream> {
-    // Generate query embedding
     const queryEmbedding = (await embedTexts([query]))[0];
 
-    // Search for relevant context
     const searchResults = await searchSimilarEmbeddings(queryEmbedding, userId, topK);
+    const SIMILARITY_THRESHOLD = 0.35;
+    const relevant = searchResults.filter((r) => (r.score ?? 0) >= SIMILARITY_THRESHOLD);
 
-    // Build context from search results
-    const contextText = searchResults
-        .map((r) => `Title: ${r.payload.title}\nChunk: ${r.payload.text_chunk}`)
-        .join("\n---\n");
+    const system = `You are a helpful, conversational AI assistant with access to the user's document knowledge base.
 
-    // Create the prompt
-    const prompt = `You are a helpful assistant that answers questions based on the provided context from the user's documents. 
-Use ONLY the information from the context below to answer the question. 
-If the context doesn't contain enough information to answer the question, say so.
-Always cite the source document title when providing information.
+    KEY GUIDELINES:
+    1. If the user's query relates to their documents, use the context provided and cite sources.
+    2. If no relevant documents are found or the query is general, respond naturally using your general knowledge.
+    3. For queries like "hi", "hello", respond in a friendly, conversational way.
+    4. Maintain context from previous messages in the conversation.
+    5. Be concise but informative.
+    6. Format responses in clear Markdown when appropriate.
 
-Format your response using proper Markdown syntax:
-- Use headers (##, ###) for sections
-- Use bullet points (- or *) for lists, not Unicode characters like ● or ○
-- Use proper line breaks between paragraphs
-- Use code blocks (\`\`\`) for code examples
-- Use **bold** for emphasis
+    Current context state: ${relevant.length > 0 ? `I have found ${relevant.length} relevant document sections to help answer your question.` : "I don't see any directly relevant documents for this query, but I'll help based on my general knowledge."}`;
 
-Context:
-${contextText}
+    const contextText = relevant.length > 0 ? relevant.map((r) => `Title: ${r.payload.title}\nContent: ${r.payload.text_chunk}`).join("\n---\n") : "";
 
-Question: ${query}
+    // Build chat-style contents with optional history
+    const contents: Array<{ role: "user" | "model"; parts: Array<{ text: string }> }> = [];
 
-Answer:`;
+    contents.push({
+        role: "user",
+        parts: [
+            {
+                text: `${system}${contextText ? `\n\nRELEVANT DOCUMENTS:\n${contextText}` : ""}`,
+            },
+        ],
+    });
 
-    // Get Gemini model and stream response
+    if (history && history.length) {
+        for (const m of history.slice(-10)) {
+            contents.push({
+                role: m.role === "user" ? "user" : "model",
+                parts: [{ text: m.content }],
+            });
+        }
+    }
+
+    contents.push({
+        role: "user",
+        parts: [{ text: `Question: ${query}\n\nAnswer:` }],
+    });
+
     const genAI = getGemini();
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    const streaming = await model.generateContentStream({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-    });
+    const streaming = await model.generateContentStream({ contents });
 
     // Convert Gemini stream to ReadableStream
     const encoder = new TextEncoder();
@@ -69,4 +82,3 @@ Answer:`;
 
     return stream;
 }
-

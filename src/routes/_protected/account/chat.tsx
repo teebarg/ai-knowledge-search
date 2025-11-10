@@ -5,10 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, Bot, User, FileText, Loader2, Plus, MessageSquare, Trash2 } from "lucide-react";
 import { useState, useEffect, useLayoutEffect, useRef } from "react";
-import { chatWithKnowledge, listConversations, createConversation, deleteConversationApi, listConversationMessages, appendConversationMessage, type Conversation } from "@/lib/api";
+import {
+    chatWithKnowledge,
+    listConversations,
+    createConversation,
+    deleteConversationApi,
+    listConversationMessages,
+    appendConversationMessage,
+    updateConversationMessage,
+    generateConversationTitle,
+    type Conversation,
+} from "@/lib/api";
 import { toast } from "sonner";
 import MarkdownUI from "~/components/ui/markdown";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Skeleton } from "~/components/ui/skeleton";
 
 export const Route = createFileRoute("/_protected/account/chat")({
     component: RouteComponent,
@@ -68,7 +79,7 @@ function RouteComponent() {
                     setCurrentConversationId(first.id);
                     const m = await listConversationMessages(first.id);
                     if (m.messages.length) {
-                        setMessages(m.messages.map(mm => ({ id: mm.id, role: mm.role, content: mm.content })));
+                        setMessages(m.messages.map((mm) => ({ id: mm.id, role: mm.role, content: mm.content })));
                     }
                 }
             } catch {
@@ -76,6 +87,32 @@ function RouteComponent() {
             }
         })();
     }, []);
+
+    useEffect(() => {
+        (async () => {
+            if (!currentConversationId) return;
+            try {
+                const m = await listConversationMessages(currentConversationId);
+                if (m.messages.length) {
+                    setMessages(m.messages.map((mm) => ({ id: mm.id, role: mm.role, content: mm.content })));
+                } else {
+                    setMessages([
+                        {
+                            id: "welcome",
+                            role: "assistant",
+                            content:
+                                "This conversation has no messages yet. Ask me anything about your documents and I'll help you find answers with citations from your knowledge base.",
+                        },
+                    ]);
+                }
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(scrollToBottomInstant);
+                });
+            } catch {
+                // ignore
+            }
+        })();
+    }, [currentConversationId]);
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
@@ -95,7 +132,6 @@ function RouteComponent() {
             requestAnimationFrame(scrollToBottomInstant);
         });
 
-        // Create a placeholder assistant message that we'll update with streaming content
         const assistantMessageId = (Date.now() + 1).toString();
         const assistantMessage: Message = {
             id: assistantMessageId,
@@ -104,13 +140,11 @@ function RouteComponent() {
         };
         setMessages((prev) => [...prev, assistantMessage]);
 
-        // Ensure conversation exists and save user message
         let convId = currentConversationId;
         try {
             if (!convId) {
-                const title = query.length > 60 ? `${query.slice(0, 57)}...` : query;
-                const conv = await createConversation(title || "New conversation");
-                setConversations(prev => [conv, ...prev]);
+                const conv = await createConversation("New conversation");
+                setConversations((prev) => [conv, ...prev]);
                 setCurrentConversationId(conv.id);
                 convId = conv.id;
             }
@@ -121,6 +155,26 @@ function RouteComponent() {
 
         try {
             let fullResponse = "";
+            let assistantSavedId: string | null = null;
+            try {
+                if (convId) {
+                    const saved = await appendConversationMessage(convId, "assistant", "");
+                    assistantSavedId = saved.id;
+                }
+            } catch {}
+
+            // Throttle updates to every 500ms
+            let lastFlush = 0;
+            const flush = async (force = false) => {
+                if (!assistantSavedId || !convId) return;
+                const now = Date.now();
+                if (!force && now - lastFlush < 500) return;
+                lastFlush = now;
+                try {
+                    await updateConversationMessage(convId, assistantSavedId, fullResponse);
+                } catch {}
+            };
+
             await chatWithKnowledge(
                 query,
                 5,
@@ -130,6 +184,7 @@ function RouteComponent() {
                     requestAnimationFrame(() => {
                         requestAnimationFrame(scrollToBottomInstant);
                     });
+                    flush();
                 },
                 (error) => {
                     toast.error("Failed to get response: " + error.message);
@@ -143,13 +198,22 @@ function RouteComponent() {
                                 : msg
                         )
                     );
-                }
+                },
+                convId || undefined
             );
 
-            // Save assistant message after stream completes
             if (convId) {
                 try {
-                    await appendConversationMessage(convId, "assistant", fullResponse);
+                    if (assistantSavedId) {
+                        await updateConversationMessage(convId, assistantSavedId, fullResponse);
+                    } else {
+                        await appendConversationMessage(convId, "assistant", fullResponse);
+                    }
+                    const current = conversations.find((c) => c.id === convId);
+                    if (current && /^new conversation$/i.test(current.title)) {
+                        const updated = await generateConversationTitle(convId);
+                        setConversations((prev) => prev.map((c) => (c.id === convId ? updated : c)));
+                    }
                 } catch {}
             }
         } catch (error) {
@@ -172,7 +236,7 @@ function RouteComponent() {
     const createNewConversation = async () => {
         try {
             const conv = await createConversation("New conversation");
-            setConversations(prev => [conv, ...prev]);
+            setConversations((prev) => [conv, ...prev]);
             setCurrentConversationId(conv.id);
             setMessages([
                 {
@@ -190,13 +254,13 @@ function RouteComponent() {
     const deleteConversation = async (id: string) => {
         try {
             await deleteConversationApi(id);
-            setConversations(prev => prev.filter(c => c.id !== id));
+            setConversations((prev) => prev.filter((c) => c.id !== id));
             if (currentConversationId === id) {
-                const next = conversations.find(c => c.id !== id);
+                const next = conversations.find((c) => c.id !== id);
                 if (next) {
                     setCurrentConversationId(next.id);
                     const m = await listConversationMessages(next.id);
-                    setMessages(m.messages.map(mm => ({ id: mm.id, role: mm.role, content: mm.content })));
+                    setMessages(m.messages.map((mm) => ({ id: mm.id, role: mm.role, content: mm.content })));
                 } else {
                     setCurrentConversationId("");
                     setMessages([
@@ -280,7 +344,14 @@ function RouteComponent() {
                                             className={`inline-block p-4 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"}`}
                                         >
                                             {message.role === "assistant" ? (
-                                                <MarkdownUI>{message.content}</MarkdownUI>
+                                                message.content === "" ? (
+                                                    <div className="space-y-2">
+                                                        <Skeleton className="h-4 w-[250px]" />
+                                                        <Skeleton className="h-4 w-[200px]" />
+                                                    </div>
+                                                ) : (
+                                                    <MarkdownUI>{message.content}</MarkdownUI>
+                                                )
                                             ) : (
                                                 <p className="text-sm leading-relaxed">{message.content}</p>
                                             )}

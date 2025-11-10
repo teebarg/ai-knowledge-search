@@ -86,6 +86,32 @@ export interface ConversationMessagesResponse {
     messages: ConversationMessage[];
 }
 
+export async function updateConversationMessage(id: string, messageId: string, content: string): Promise<void> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${id}/messages/${messageId}`, {
+        method: "PATCH",
+        headers,
+        body: JSON.stringify({ content }),
+    });
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to update message" }));
+        throw new Error(error.error || "Failed to update message");
+    }
+}
+
+export async function generateConversationTitle(id: string): Promise<Conversation> {
+    const headers = await getAuthHeaders();
+    const response = await fetch(`${API_BASE_URL}/v1/conversations/${id}/generate-title`, {
+        method: "POST",
+        headers,
+    });
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Failed to generate title" }));
+        throw new Error(error.error || "Failed to generate title");
+    }
+    return response.json();
+}
+
 /**
  * Upload a document (file or text) to the knowledge base
  */
@@ -224,7 +250,8 @@ export async function chatWithKnowledge(
     query: string,
     topK: number = 5,
     onChunk: (chunk: string) => void,
-    onError?: (error: Error) => void
+    onError?: (error: Error) => void,
+    conversationId?: string
 ): Promise<void> {
     try {
         const headers = await getAuthHeaders();
@@ -232,7 +259,7 @@ export async function chatWithKnowledge(
         const response = await fetch(`${API_BASE_URL}/v1/chat`, {
             method: "POST",
             headers,
-            body: JSON.stringify({ query, topK }),
+            body: JSON.stringify({ query, topK, conversationId }),
         });
 
         if (!response.ok) {
