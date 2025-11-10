@@ -1,7 +1,7 @@
-import { chatWithKnowledge } from "../lib/chat.js";
-import { ConversationRepository } from "../repositories/conversation.repository.js";
-import type { ConversationMessage } from "../types/index.js";
-import { ApiError } from "../utils/response.utils.js";
+import { chatWithKnowledge } from "@/api/lib/chat.js";
+import { ConversationRepository } from "@/api/repositories/conversation.repository.js";
+import type { ConversationMessage } from "@/api/types/index.js";
+import { ApiError } from "@/api/utils/response.utils.js";
 
 export class ChatService {
     constructor(private conversationRepo: ConversationRepository) {}

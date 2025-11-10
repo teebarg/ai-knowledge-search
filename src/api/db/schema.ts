@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, varchar, integer, uuid, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, varchar, integer, uuid, pgEnum, boolean } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { vector } from "./vector";
 
@@ -8,7 +8,9 @@ export const documentStatusEnum = pgEnum("document_status", ["processing", "comp
 // Documents table - stores metadata about uploaded documents
 export const documents = pgTable("documents", {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: uuid("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     fileName: text("file_name"),
     fileUrl: text("file_url"), // Supabase Storage URL
@@ -27,7 +29,9 @@ export const embeddings = pgTable("embeddings", {
     documentId: uuid("document_id")
         .notNull()
         .references(() => documents.id, { onDelete: "cascade" }),
-    userId: text("user_id").notNull(),
+    userId: uuid("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
     chunkIndex: integer("chunk_index").notNull(),
     textChunk: text("text_chunk").notNull(),
     embedding: vector("embedding", { dimensions: 768 }), // 768 for Gemini text-embedding-004
@@ -38,7 +42,9 @@ export const embeddings = pgTable("embeddings", {
 // Conversations table
 export const conversations = pgTable("conversations", {
     id: uuid("id").defaultRandom().primaryKey(),
-    userId: text("user_id").notNull(),
+    userId: uuid("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
     title: text("title").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -50,7 +56,9 @@ export const conversationMessages = pgTable("conversation_messages", {
     conversationId: uuid("conversation_id")
         .notNull()
         .references(() => conversations.id, { onDelete: "cascade" }),
-    userId: text("user_id").notNull(),
+    userId: uuid("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
     role: text("role").notNull(), // "user" | "assistant"
     content: text("content").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -68,10 +76,22 @@ export const embeddingsRelations = relations(embeddings, ({ one }) => ({
     }),
 }));
 
-// Users table (if needed for additional user data)
 export const users = pgTable("users", {
-    id: serial("id").primaryKey(),
+    id: uuid("id").defaultRandom().primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
     email: text("email").notNull().unique(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const userSettings = pgTable("user_settings", {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: uuid("user_id")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    apiKey: text("api_key"),
+    useOwnKey: boolean("use_own_key").default(false),
+    preferredModel: text("preferred_model").default("gemini"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

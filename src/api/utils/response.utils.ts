@@ -11,10 +11,10 @@ export class ApiError extends Error {
     }
 }
 
-export const successResponse = <T>(c: Context, data: T, status = 200) => {
-    return c.json(data, status);
+export const successResponse = <T>(c: Context, data: T) => {
+    return c.json(data);
 };
 
 export const errorResponse = (c: Context, error: string, details?: string, status = 500) => {
-    return c.json({ error, details }, status);
+    return c.json({ error, details }, status as any);
 };
