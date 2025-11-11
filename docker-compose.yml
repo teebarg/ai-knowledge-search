@@ -63,7 +63,7 @@ services:
       - aik-public
       - default
   db:
-    image: postgres:15
+    image: pgvector/pgvector:pg18
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U admin -d aik" ]
       interval: 10s
@@ -80,7 +80,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: aik
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - pgv-data:/var/lib/postgresql/data
 
   adminer:
     image: adminer:5.3.0
@@ -103,6 +103,7 @@ services:
 
 volumes:
   pg-data:
+  pgv-data:
 
 networks:
   aik-public:

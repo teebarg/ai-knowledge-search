@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, varchar, integer, uuid, pgEnum, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, varchar, integer, uuid, pgEnum, boolean, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { vector } from "./vector";
 
@@ -94,4 +94,6 @@ export const userSettings = pgTable("user_settings", {
     preferredModel: text("preferred_model").default("gemini"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => ({
+    userIdUnique: unique("user_settings_user_id_unique").on(table.userId),
+}));

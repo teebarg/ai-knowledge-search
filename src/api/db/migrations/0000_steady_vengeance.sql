@@ -48,7 +48,8 @@ CREATE TABLE "user_settings" (
 	"use_own_key" boolean DEFAULT false,
 	"preferred_model" text DEFAULT 'gemini',
 	"created_at" timestamp DEFAULT now() NOT NULL,
-	"updated_at" timestamp DEFAULT now() NOT NULL
+	"updated_at" timestamp DEFAULT now() NOT NULL,
+	CONSTRAINT "user_settings_user_id_unique" UNIQUE("user_id")
 );
 --> statement-breakpoint
 CREATE TABLE "users" (

@@ -8,14 +8,15 @@ export class SettingsRepository {
         return settings[0] || null;
     }
 
-    async upsertSettings(userId: string, data: {
-        apiKey?: string;
-        useOwnKey?: boolean;
-        preferredModel?: string;
-    }) {
+    async upsertSettings(
+        userId: string,
+        data: {
+            apiKey?: string;
+            useOwnKey?: boolean;
+            preferredModel?: string;
+        }
+    ) {
         const now = new Date();
-
-        // Upsert user_settings
         await db
             .insert(userSettings)
             .values({
@@ -38,9 +39,7 @@ export class SettingsRepository {
 
     async updateUserName(userId: string, name: string) {
         const now = new Date();
-        await db.update(users)
-            .set({ name, updatedAt: now })
-            .where(eq(users.id, userId));
+        await db.update(users).set({ name, updatedAt: now }).where(eq(users.id, userId));
         // Return updated user
         const user = await db.select().from(users).where(eq(users.id, userId));
         return user[0] || null;

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { User, Key, Brain, LogOut } from "lucide-react";
+import { User, Key, Brain, LogOut, EyeOffIcon, EyeIcon } from "lucide-react";
 import { logoutFn } from "~/lib/auth-server";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
@@ -21,6 +21,8 @@ function RouteComponent() {
     const navigate = useNavigate();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSavingApiKey, setIsSavingApiKey] = useState(false);
+    const [showApiKey, setShowApiKey] = useState(false);
     const [settings, setSettings] = useState<Settings>({
         useOwnKey: false,
         preferredModel: "gemini",
@@ -50,13 +52,14 @@ function RouteComponent() {
 
     const handleSaveProfile = async () => {
         if (!profile) return;
+        const toastId = toast.loading("Saving profile...");
         try {
             const updatedProfile = await updateProfile({ name: profile.name });
             setProfile(updatedProfile);
-            toast.success("Profile saved");
+            toast.success("Profile saved", { id: toastId });
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to save profile";
-            toast.error(message);
+            toast.error(message, { id: toastId });
         }
     };
 
@@ -69,6 +72,8 @@ function RouteComponent() {
     };
 
     const handleSaveApiKey = async (key: string = apiKey) => {
+        setIsSavingApiKey(true);
+        const toastId = toast.loading("Saving API key...");
         try {
             const updatedSettings = await updateSettings({
                 apiKey: key,
@@ -76,24 +81,27 @@ function RouteComponent() {
             });
             setSettings(updatedSettings);
             if (key) {
-                toast.success("API key saved");
+                toast.success("API key saved", { id: toastId });
             } else {
-                toast.success("API key removed");
+                toast.success("API key removed", { id: toastId });
             }
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to save API key";
-            toast.error(message);
+            toast.error(message, { id: toastId });
+        } finally {
+            setIsSavingApiKey(false);
         }
     };
 
     const handleModelChange = async (model: string) => {
+        const toastId = toast.loading("Saving model preference...");
         try {
             const updatedSettings = await updateSettings({ preferredModel: model });
             setSettings(updatedSettings);
-            toast.success("Model preference saved");
+            toast.success("Model preference saved", { id: toastId });
         } catch (error) {
             const message = error instanceof Error ? error.message : "Failed to save model preference";
-            toast.error(message);
+            toast.error(message, { id: toastId });
         }
     };
 
@@ -168,17 +176,27 @@ function RouteComponent() {
                     {settings.useOwnKey && (
                         <div className="space-y-2 animate-fade-in">
                             <Label htmlFor="api-key">Your API Key</Label>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 items-center">
                                 <Input
                                     id="api-key"
-                                    type="password"
+                                    type={showApiKey ? "text" : "password"}
                                     placeholder="sk-••••••••••••••••"
                                     className="flex-1"
                                     value={apiKey}
                                     onChange={(e) => setApiKey(e.target.value)}
+                                    disabled={isSavingApiKey}
                                 />
-                                <Button variant="outline" onClick={() => handleSaveApiKey()}>
-                                    Save
+                                <Button
+                                    type="button"
+                                    variant="ghost"
+                                    onClick={() => setShowApiKey((v) => !v)}
+                                    tabIndex={-1}
+                                    aria-label={showApiKey ? "Hide API key" : "Show API key"}
+                                >
+                                    {showApiKey ? <EyeOffIcon /> : <EyeIcon />}
+                                </Button>
+                                <Button variant="outline" onClick={() => handleSaveApiKey()} disabled={isSavingApiKey}>
+                                    {isSavingApiKey ? "Saving..." : "Save"}
                                 </Button>
                             </div>
                             <p className="text-xs text-muted-foreground">Your API key is encrypted and stored securely</p>
