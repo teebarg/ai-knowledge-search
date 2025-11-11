@@ -1,0 +1,8 @@
+# .dockerignore
+node_modules
+dist
+.dockerignore
+Dockerfile
+# add other files/folders you want to ignore, e.g.,
+.git
+.vscode

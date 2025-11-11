@@ -31,7 +31,7 @@ export function MagicLinkForm() {
     });
 
     const onSubmit = async (data: MagicLinkFormData) => {
-        const emailRedirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/oauth?next=${location.pathname}` : undefined;
+        const emailRedirectTo = typeof window !== "undefined" ? `${import.meta.env.VITE_SITE_URL}/auth/oauth?next=${location.pathname}` : undefined;
 
         toast.loading("Sending magic link...", { id: "magic" });
         try {

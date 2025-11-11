@@ -5,25 +5,29 @@ import viteReact from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
-  server: {
-    port: 5173,
-    proxy: {
-      "/v1": {
-        target: process.env.VITE_API_URL || "http://localhost:8787",
-        changeOrigin: true,
-      },
-      "/health": {
-        target: process.env.VITE_API_URL || "http://localhost:8787",
-        changeOrigin: true,
-      },
+    server: {
+        port: 5173,
+        proxy: {
+            "/v1": {
+                target: process.env.VITE_API_URL || "http://localhost:8787",
+                changeOrigin: true,
+            },
+            "/health": {
+                target: process.env.VITE_API_URL || "http://localhost:8787",
+                changeOrigin: true,
+            },
+        },
+        watch: {
+            usePolling: true,
+            interval: 1000,
+        },
     },
-  },
-  plugins: [
-    tsConfigPaths({
-      projects: ["./tsconfig.json"],
-    }),
-    tailwindcss(),
-    tanstackStart(),
-    viteReact(),
-  ],
+    plugins: [
+        tsConfigPaths({
+            projects: ["./tsconfig.json"],
+        }),
+        tailwindcss(),
+        tanstackStart(),
+        viteReact(),
+    ],
 });

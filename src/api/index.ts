@@ -12,6 +12,7 @@ import { chatRoutes } from "@/api/routes/chat.routes";
 import { conversationRoutes } from "@/api/routes/conversation.routes";
 import { settingsRoutes } from "@/api/routes/settings.routes";
 import { profileRoutes } from "@/api/routes/profile.routes";
+import { healthRoute } from "./routes/health.routes";
 
 const port = Number(process.env.PORT || 8787);
 
@@ -25,6 +26,7 @@ app.onError(errorHandler);
 app.use("/v1/*", authMiddleware);
 
 
+app.route("/", healthRoute);
 app.route("/v1", documentRoutes);
 app.route("/v1", searchRoutes);
 app.route("/v1", chatRoutes);

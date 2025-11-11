@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "concurrently \"npm run dev:web\" \"npm run dev:api\"",
-    "dev:web": "vite dev",
+    "dev:web": "vite dev --host 0.0.0.0",
     "dev:api": "tsx watch src/api/index.ts",
     "build": "vite build && tsup src/server/index.ts --format esm --out-dir dist/server",
     "start": "vite start",

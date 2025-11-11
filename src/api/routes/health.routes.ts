@@ -16,7 +16,7 @@ healthRoute.openapi(
             },
         },
     }),
-    (c) => c.json({ message: "Server is running" })
+    (c) => c.json({ message: "Server is running", ok: true })
 );
 
 healthRoute.get("/", (c) =>

@@ -36,7 +36,7 @@ export function SignupForm({ isLoading }: SignupFormProps) {
     const onSubmit = async (data: SignupFormData) => {
         toast.loading("Creating your account...", { id: "signup" });
         try {
-            const redirectUrl = typeof window !== "undefined" ? `${window.location.origin}/auth` : undefined;
+            const redirectUrl = typeof window !== "undefined" ? `${import.meta.env.VITE_SITE_URL}/auth` : undefined;
 
             await signupFn({
                 data: {
