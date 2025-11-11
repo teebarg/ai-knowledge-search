@@ -1,30 +1,112 @@
 services:
+  traefik:
+    image: traefik:v2.9
+    command:
+      # Enable Docker in Traefik, so that it reads labels from Docker services
+      - --providers.docker
+      # Add a constraint to only use services with the label for this stack
+      - --providers.docker.constraints=Label(`traefik.constraint-label`, `traefik-public`)
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+      # - --log.level=DEBUG  # Debug logging
+    ports:
+      - 6000:80 # HTTP entrypoint
+      - 6001:8080 # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - traefik-public
+      - default
+    labels:
+      # Enable Traefik
+      - traefik.enable=true
+      - traefik.constraint-label=traefik-public
+      # Dashboard route setup
+      - traefik.http.routers.traefik-dashboard.entrypoints=http
+      - traefik.http.routers.traefik-dashboard.rule=Host(`traefik.localhost`)
+      - traefik.http.services.traefik-dashboard.loadbalancer.server.port=8080
+      - traefik.http.routers.traefik-dashboard.service=api@internal
+      - traefik.http.middlewares.https-redirect.contenttype.autodetect=false
   app:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    container_name: tanstack-hono-dev
+    container_name: ai-knowledge-search
     ports:
-      - "2000:5173"  # Vite frontend
-      - "2001:8787"  # Hono API
+      - "6002:5173"  # Vite frontend
+      - "6003:8787"  # Hono API
     volumes:
       # Mount source code for hot reload
-      - ./app:/app/app
-      - ./server:/app/server
+      - /app/node_modules
+      - ./src:/app/src
       - ./public:/app/public
-      - ./index.html:/app/index.html
       - ./vite.config.ts:/app/vite.config.ts
       - ./tsconfig.json:/app/tsconfig.json
       # Preserve node_modules
       - /app/node_modules
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://localhost:2001
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+      - VITE_API_URL=http://localhost:6003
     stdin_open: true
     tty: true
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=crm-public
+      - traefik.constraint-label=crm-public
+      - traefik.http.services.app.loadbalancer.server.port=5173
+      - traefik.http.routers.app-http.rule=Host(`ak.localhost`)
+      - traefik.http.routers.app-http.entrypoints=http
     networks:
-      - app-network
+      - traefik-public
+      - default
+  postgres:
+    image: postgres:15
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U admin -d tbo" ]
+      interval: 10s
+      retries: 5
+      start_period: 30s
+      timeout: 10s
+    ports:
+      - "6004:5432"
+    networks:
+      - traefik-public
+      - default
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: aik
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer:5.3.0
+    ports:
+      - "6005:8080"
+    networks:
+      - traefik-public
+      - default
+    depends_on:
+      - postgres
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.constraint-label=traefik-public
+
+      - traefik.http.services.adminer.loadbalancer.server.port=8080
+
+      - traefik.http.routers.adminer-http.rule=Host(`adminer.localhost`)
+      - traefik.http.routers.adminer-http.entrypoints=http
+
+
+volumes:
+  pg-data:
 
 networks:
-  app-network:
-    driver: bridge
+  traefik-public:
+    external: false
