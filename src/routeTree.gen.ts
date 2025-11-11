@@ -17,6 +17,8 @@ import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AuthOauthRouteImport } from './routes/auth/oauth'
 import { Route as AuthErrorRouteImport } from './routes/auth/error'
 import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
+import { Route as ProtectedOnboardingRouteImport } from './routes/_protected/onboarding'
+import { Route as ProtectedAccountRouteImport } from './routes/_protected/account'
 import { Route as ProtectedAccountIndexRouteImport } from './routes/_protected/account/index'
 import { Route as ProtectedAccountSettingsRouteImport } from './routes/_protected/account/settings'
 import { Route as ProtectedAccountSearchRouteImport } from './routes/_protected/account/search'
@@ -62,38 +64,50 @@ const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => ProtectedRoute,
 } as any)
-const ProtectedAccountIndexRoute = ProtectedAccountIndexRouteImport.update({
-  id: '/account/',
-  path: '/account/',
+const ProtectedOnboardingRoute = ProtectedOnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedAccountRoute = ProtectedAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => ProtectedRoute,
+} as any)
+const ProtectedAccountIndexRoute = ProtectedAccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ProtectedAccountRoute,
 } as any)
 const ProtectedAccountSettingsRoute =
   ProtectedAccountSettingsRouteImport.update({
-    id: '/account/settings',
-    path: '/account/settings',
-    getParentRoute: () => ProtectedRoute,
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => ProtectedAccountRoute,
   } as any)
 const ProtectedAccountSearchRoute = ProtectedAccountSearchRouteImport.update({
-  id: '/account/search',
-  path: '/account/search',
-  getParentRoute: () => ProtectedRoute,
+  id: '/search',
+  path: '/search',
+  getParentRoute: () => ProtectedAccountRoute,
 } as any)
 const ProtectedAccountDocumentsRoute =
   ProtectedAccountDocumentsRouteImport.update({
-    id: '/account/documents',
-    path: '/account/documents',
-    getParentRoute: () => ProtectedRoute,
+    id: '/documents',
+    path: '/documents',
+    getParentRoute: () => ProtectedAccountRoute,
   } as any)
 const ProtectedAccountChatRoute = ProtectedAccountChatRouteImport.update({
-  id: '/account/chat',
-  path: '/account/chat',
-  getParentRoute: () => ProtectedRoute,
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => ProtectedAccountRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
   '/deferred': typeof DeferredRoute
+  '/account': typeof ProtectedAccountRouteWithChildren
+  '/onboarding': typeof ProtectedOnboardingRoute
   '/profile': typeof ProtectedProfileRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/oauth': typeof AuthOauthRoute
@@ -102,11 +116,12 @@ export interface FileRoutesByFullPath {
   '/account/documents': typeof ProtectedAccountDocumentsRoute
   '/account/search': typeof ProtectedAccountSearchRoute
   '/account/settings': typeof ProtectedAccountSettingsRoute
-  '/account': typeof ProtectedAccountIndexRoute
+  '/account/': typeof ProtectedAccountIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/deferred': typeof DeferredRoute
+  '/onboarding': typeof ProtectedOnboardingRoute
   '/profile': typeof ProtectedProfileRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/oauth': typeof AuthOauthRoute
@@ -123,6 +138,8 @@ export interface FileRoutesById {
   '/_protected': typeof ProtectedRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
   '/deferred': typeof DeferredRoute
+  '/_protected/account': typeof ProtectedAccountRouteWithChildren
+  '/_protected/onboarding': typeof ProtectedOnboardingRoute
   '/_protected/profile': typeof ProtectedProfileRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/oauth': typeof AuthOauthRoute
@@ -139,6 +156,8 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/deferred'
+    | '/account'
+    | '/onboarding'
     | '/profile'
     | '/auth/error'
     | '/auth/oauth'
@@ -147,11 +166,12 @@ export interface FileRouteTypes {
     | '/account/documents'
     | '/account/search'
     | '/account/settings'
-    | '/account'
+    | '/account/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/deferred'
+    | '/onboarding'
     | '/profile'
     | '/auth/error'
     | '/auth/oauth'
@@ -167,6 +187,8 @@ export interface FileRouteTypes {
     | '/_protected'
     | '/auth'
     | '/deferred'
+    | '/_protected/account'
+    | '/_protected/onboarding'
     | '/_protected/profile'
     | '/auth/error'
     | '/auth/oauth'
@@ -243,46 +265,59 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProtectedProfileRouteImport
       parentRoute: typeof ProtectedRoute
     }
-    '/_protected/account/': {
-      id: '/_protected/account/'
+    '/_protected/onboarding': {
+      id: '/_protected/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof ProtectedOnboardingRouteImport
+      parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/account': {
+      id: '/_protected/account'
       path: '/account'
       fullPath: '/account'
-      preLoaderRoute: typeof ProtectedAccountIndexRouteImport
+      preLoaderRoute: typeof ProtectedAccountRouteImport
       parentRoute: typeof ProtectedRoute
+    }
+    '/_protected/account/': {
+      id: '/_protected/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof ProtectedAccountIndexRouteImport
+      parentRoute: typeof ProtectedAccountRoute
     }
     '/_protected/account/settings': {
       id: '/_protected/account/settings'
-      path: '/account/settings'
+      path: '/settings'
       fullPath: '/account/settings'
       preLoaderRoute: typeof ProtectedAccountSettingsRouteImport
-      parentRoute: typeof ProtectedRoute
+      parentRoute: typeof ProtectedAccountRoute
     }
     '/_protected/account/search': {
       id: '/_protected/account/search'
-      path: '/account/search'
+      path: '/search'
       fullPath: '/account/search'
       preLoaderRoute: typeof ProtectedAccountSearchRouteImport
-      parentRoute: typeof ProtectedRoute
+      parentRoute: typeof ProtectedAccountRoute
     }
     '/_protected/account/documents': {
       id: '/_protected/account/documents'
-      path: '/account/documents'
+      path: '/documents'
       fullPath: '/account/documents'
       preLoaderRoute: typeof ProtectedAccountDocumentsRouteImport
-      parentRoute: typeof ProtectedRoute
+      parentRoute: typeof ProtectedAccountRoute
     }
     '/_protected/account/chat': {
       id: '/_protected/account/chat'
-      path: '/account/chat'
+      path: '/chat'
       fullPath: '/account/chat'
       preLoaderRoute: typeof ProtectedAccountChatRouteImport
-      parentRoute: typeof ProtectedRoute
+      parentRoute: typeof ProtectedAccountRoute
     }
   }
 }
 
-interface ProtectedRouteChildren {
-  ProtectedProfileRoute: typeof ProtectedProfileRoute
+interface ProtectedAccountRouteChildren {
   ProtectedAccountChatRoute: typeof ProtectedAccountChatRoute
   ProtectedAccountDocumentsRoute: typeof ProtectedAccountDocumentsRoute
   ProtectedAccountSearchRoute: typeof ProtectedAccountSearchRoute
@@ -290,13 +325,27 @@ interface ProtectedRouteChildren {
   ProtectedAccountIndexRoute: typeof ProtectedAccountIndexRoute
 }
 
-const ProtectedRouteChildren: ProtectedRouteChildren = {
-  ProtectedProfileRoute: ProtectedProfileRoute,
+const ProtectedAccountRouteChildren: ProtectedAccountRouteChildren = {
   ProtectedAccountChatRoute: ProtectedAccountChatRoute,
   ProtectedAccountDocumentsRoute: ProtectedAccountDocumentsRoute,
   ProtectedAccountSearchRoute: ProtectedAccountSearchRoute,
   ProtectedAccountSettingsRoute: ProtectedAccountSettingsRoute,
   ProtectedAccountIndexRoute: ProtectedAccountIndexRoute,
+}
+
+const ProtectedAccountRouteWithChildren =
+  ProtectedAccountRoute._addFileChildren(ProtectedAccountRouteChildren)
+
+interface ProtectedRouteChildren {
+  ProtectedAccountRoute: typeof ProtectedAccountRouteWithChildren
+  ProtectedOnboardingRoute: typeof ProtectedOnboardingRoute
+  ProtectedProfileRoute: typeof ProtectedProfileRoute
+}
+
+const ProtectedRouteChildren: ProtectedRouteChildren = {
+  ProtectedAccountRoute: ProtectedAccountRouteWithChildren,
+  ProtectedOnboardingRoute: ProtectedOnboardingRoute,
+  ProtectedProfileRoute: ProtectedProfileRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
