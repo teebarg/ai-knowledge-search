@@ -1,5 +1,5 @@
 /// <reference types="vite/client" />
-import { HeadContent, Outlet, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
+import { HeadContent, Outlet, ScriptOnce, Scripts, createRootRouteWithContext } from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import * as React from "react";
@@ -9,6 +9,7 @@ import { NotFound } from "@/components/NotFound";
 import appCss from "@/styles.css?url";
 import { seo } from "@/utils/seo";
 import { Toaster } from "sonner";
+import { getStoredTheme, ThemeProvider } from "~/lib/ThemeProvider";
 
 export const Route = createRootRouteWithContext<{
     queryClient: QueryClient;
@@ -50,6 +51,7 @@ export const Route = createRootRouteWithContext<{
             { rel: "icon", href: "/favicon.ico" },
         ],
     }),
+    loader: async () => ({ _storedTheme: await getStoredTheme() }),
     errorComponent: (props) => {
         return (
             <RootDocument>
@@ -70,17 +72,33 @@ function RootComponent() {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+    const { _storedTheme } = Route.useLoaderData();
     return (
-        <html suppressHydrationWarning>
+        <html suppressHydrationWarning className="antialiased">
             <head>
                 <HeadContent />
+                <ScriptOnce
+                    children={`
+                    (function() {
+                        const storedTheme = ${JSON.stringify(_storedTheme)};
+                        if (storedTheme === 'system') {
+                        const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                        document.documentElement.className = systemTheme;
+                        } else {
+                        document.documentElement.className = storedTheme;
+                        }
+                    })();
+                    `}
+                />
             </head>
-            <body>
-                {children}
-                <TanStackRouterDevtools position="bottom-right" />
-                <ReactQueryDevtools buttonPosition="bottom-left" />
-                <Toaster closeButton richColors duration={3000} expand={false} position="top-right" />
-                <Scripts />
+            <body className="min-h-screen bg-background text-foreground">
+                <ThemeProvider initialTheme={_storedTheme}>
+                    {children}
+                    <TanStackRouterDevtools position="bottom-right" />
+                    <ReactQueryDevtools buttonPosition="bottom-left" />
+                    <Toaster closeButton richColors duration={3000} expand={false} position="top-right" />
+                    <Scripts />
+                </ThemeProvider>
             </body>
         </html>
     );

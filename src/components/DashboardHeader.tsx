@@ -15,6 +15,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { logoutFn } from "~/lib/auth-server";
 import { toast } from "sonner";
 import { useState } from "react";
+import { ThemeToggle } from "./theme-toggle";
 
 export function DashboardHeader() {
   const navigate = useNavigate();
@@ -38,14 +39,16 @@ export function DashboardHeader() {
     <header className="h-16 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex items-center px-4 md:px-6 gap-4">
       <SidebarTrigger />
       
-      <div className="flex-1 max-w-2xl">
+      <div className="flex items-center gap-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search your knowledge base..."
-            className="pl-10"
+            type="search"
+            placeholder="Search documents..."
+            className="w-full rounded-lg bg-background pl-8 md:w-[200px] lg:w-[336px]"
           />
         </div>
+        <ThemeToggle />
       </div>
 
       <Button size="sm" className="gap-2">
