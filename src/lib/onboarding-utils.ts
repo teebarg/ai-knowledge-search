@@ -1,16 +1,13 @@
-import { getSupabaseServerClient } from "./supabase/supabase";
+import { getSupabaseServerClient } from "~/lib/supabase/supabase";
 import { db } from "@/api/db";
 import { users } from "@/api/db/schema";
 import { eq } from "drizzle-orm";
+import { createServerFn } from "@tanstack/react-start";
 
-/**
- * Server-side function to check if user has completed onboarding
- */
-export async function checkOnboardingStatus(): Promise<{
-    onboardingCompleted: boolean;
-    onboardingStep: number;
-}> {
-    const supabase = getSupabaseServerClient();
+export const checkOnboardingStatus: () => Promise<{ onboardingCompleted: boolean; onboardingStep: number; }> = createServerFn({
+    method: 'GET',
+}).handler(async () => {
+    const supabase = getSupabaseServerClient()
     const { data: { user }, error } = await supabase.auth.getUser();
 
     if (error || !user) {
@@ -33,5 +30,4 @@ export async function checkOnboardingStatus(): Promise<{
         onboardingCompleted: dbUser[0].onboardingCompleted ?? false,
         onboardingStep: dbUser[0].onboardingStep ?? 0,
     };
-}
-
+})

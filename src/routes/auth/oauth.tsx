@@ -38,19 +38,14 @@ const confirmFn = createServerFn({ method: "GET" })
                 if (!onboardingCompleted) {
                     throw redirect({ to: "/onboarding" });
                 }
-
-                // redirect user to specified redirect URL or root of app
                 throw redirect({ href: next });
             } else {
-                // redirect the user to an error page with some instructions
                 throw redirect({
                     to: `/auth/error`,
                     search: { error: error?.message },
                 });
             }
         }
-
-        // redirect the user to an error page with some instructions
         throw redirect({
             to: `/auth/error`,
             search: { error: "No code found" },

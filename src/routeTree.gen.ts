@@ -16,7 +16,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthIndexRouteImport } from './routes/auth/index'
 import { Route as AuthOauthRouteImport } from './routes/auth/oauth'
 import { Route as AuthErrorRouteImport } from './routes/auth/error'
-import { Route as ProtectedProfileRouteImport } from './routes/_protected/profile'
 import { Route as ProtectedOnboardingRouteImport } from './routes/_protected/onboarding'
 import { Route as ProtectedAccountRouteImport } from './routes/_protected/account'
 import { Route as ProtectedAccountIndexRouteImport } from './routes/_protected/account/index'
@@ -58,11 +57,6 @@ const AuthErrorRoute = AuthErrorRouteImport.update({
   id: '/error',
   path: '/error',
   getParentRoute: () => AuthRoute,
-} as any)
-const ProtectedProfileRoute = ProtectedProfileRouteImport.update({
-  id: '/profile',
-  path: '/profile',
-  getParentRoute: () => ProtectedRoute,
 } as any)
 const ProtectedOnboardingRoute = ProtectedOnboardingRouteImport.update({
   id: '/onboarding',
@@ -108,7 +102,6 @@ export interface FileRoutesByFullPath {
   '/deferred': typeof DeferredRoute
   '/account': typeof ProtectedAccountRouteWithChildren
   '/onboarding': typeof ProtectedOnboardingRoute
-  '/profile': typeof ProtectedProfileRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/oauth': typeof AuthOauthRoute
   '/auth/': typeof AuthIndexRoute
@@ -122,7 +115,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/deferred': typeof DeferredRoute
   '/onboarding': typeof ProtectedOnboardingRoute
-  '/profile': typeof ProtectedProfileRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/oauth': typeof AuthOauthRoute
   '/auth': typeof AuthIndexRoute
@@ -140,7 +132,6 @@ export interface FileRoutesById {
   '/deferred': typeof DeferredRoute
   '/_protected/account': typeof ProtectedAccountRouteWithChildren
   '/_protected/onboarding': typeof ProtectedOnboardingRoute
-  '/_protected/profile': typeof ProtectedProfileRoute
   '/auth/error': typeof AuthErrorRoute
   '/auth/oauth': typeof AuthOauthRoute
   '/auth/': typeof AuthIndexRoute
@@ -158,7 +149,6 @@ export interface FileRouteTypes {
     | '/deferred'
     | '/account'
     | '/onboarding'
-    | '/profile'
     | '/auth/error'
     | '/auth/oauth'
     | '/auth/'
@@ -172,7 +162,6 @@ export interface FileRouteTypes {
     | '/'
     | '/deferred'
     | '/onboarding'
-    | '/profile'
     | '/auth/error'
     | '/auth/oauth'
     | '/auth'
@@ -189,7 +178,6 @@ export interface FileRouteTypes {
     | '/deferred'
     | '/_protected/account'
     | '/_protected/onboarding'
-    | '/_protected/profile'
     | '/auth/error'
     | '/auth/oauth'
     | '/auth/'
@@ -257,13 +245,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/error'
       preLoaderRoute: typeof AuthErrorRouteImport
       parentRoute: typeof AuthRoute
-    }
-    '/_protected/profile': {
-      id: '/_protected/profile'
-      path: '/profile'
-      fullPath: '/profile'
-      preLoaderRoute: typeof ProtectedProfileRouteImport
-      parentRoute: typeof ProtectedRoute
     }
     '/_protected/onboarding': {
       id: '/_protected/onboarding'
@@ -339,13 +320,11 @@ const ProtectedAccountRouteWithChildren =
 interface ProtectedRouteChildren {
   ProtectedAccountRoute: typeof ProtectedAccountRouteWithChildren
   ProtectedOnboardingRoute: typeof ProtectedOnboardingRoute
-  ProtectedProfileRoute: typeof ProtectedProfileRoute
 }
 
 const ProtectedRouteChildren: ProtectedRouteChildren = {
   ProtectedAccountRoute: ProtectedAccountRouteWithChildren,
   ProtectedOnboardingRoute: ProtectedOnboardingRoute,
-  ProtectedProfileRoute: ProtectedProfileRoute,
 }
 
 const ProtectedRouteWithChildren = ProtectedRoute._addFileChildren(
