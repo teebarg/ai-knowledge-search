@@ -42,9 +42,22 @@ export function LoginForm({ isLoading }: LoginFormProps) {
             });
             toast.success("Welcome back! Redirecting...", { id: "login" });
             reset();
-            setTimeout(() => {
-                navigate({ to: "/account" });
-            }, 500);
+
+            const { getOnboardingStatusFn } = await import("~/lib/onboarding-server");
+            try {
+                const status = await getOnboardingStatusFn();
+                setTimeout(() => {
+                    if (!status.onboardingCompleted) {
+                        navigate({ to: "/onboarding" });
+                    } else {
+                        navigate({ to: "/account" });
+                    }
+                }, 500);
+            } catch {
+                setTimeout(() => {
+                    navigate({ to: "/onboarding" });
+                }, 500);
+            }
         } catch (error) {
             const message = error instanceof Error ? error.message : "Unable to sign in";
             toast.error(message || "Invalid email or password. Please try again.", {

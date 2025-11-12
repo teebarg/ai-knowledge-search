@@ -32,6 +32,13 @@ const confirmFn = createServerFn({ method: "GET" })
 
             const { error } = await supabase.auth.exchangeCodeForSession(code);
             if (!error) {
+                const { checkOnboardingStatus } = await import("~/lib/onboarding-utils");
+                const { onboardingCompleted } = await checkOnboardingStatus();
+
+                if (!onboardingCompleted) {
+                    throw redirect({ to: "/onboarding" });
+                }
+
                 // redirect user to specified redirect URL or root of app
                 throw redirect({ href: next });
             } else {

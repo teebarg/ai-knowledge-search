@@ -1,0 +1,37 @@
+import { getSupabaseServerClient } from "./supabase/supabase";
+import { db } from "@/api/db";
+import { users } from "@/api/db/schema";
+import { eq } from "drizzle-orm";
+
+/**
+ * Server-side function to check if user has completed onboarding
+ */
+export async function checkOnboardingStatus(): Promise<{
+    onboardingCompleted: boolean;
+    onboardingStep: number;
+}> {
+    const supabase = getSupabaseServerClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+
+    if (error || !user) {
+        return {
+            onboardingCompleted: false,
+            onboardingStep: 0,
+        };
+    }
+
+    const dbUser = await db.select().from(users).where(eq(users.id, user.id));
+
+    if (!dbUser[0]) {
+        return {
+            onboardingCompleted: false,
+            onboardingStep: 0,
+        };
+    }
+
+    return {
+        onboardingCompleted: dbUser[0].onboardingCompleted ?? false,
+        onboardingStep: dbUser[0].onboardingStep ?? 0,
+    };
+}
+

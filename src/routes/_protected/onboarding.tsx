@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Brain, Database, MessageSquare, Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
+import { getOnboardingStatusFn, updateOnboardingStepFn, completeOnboardingFn } from "~/lib/onboarding-server";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_protected/onboarding")({
     component: RouteComponent,
@@ -20,18 +22,22 @@ function RouteComponent() {
     const navigate = useNavigate();
     const [direction, setDirection] = useState<"forward" | "backward">("forward");
     const [isTransitioning, setIsTransitioning] = useState(false);
-
-    const [currentStep, setCurrentStep] = useState(() => {
-        if (typeof localStorage !== "undefined") {
-            const saved = localStorage.getItem("onboarding-step");
-            return saved ? parseInt(saved, 10) : 0;
-        }
-        return 0;
-    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [currentStep, setCurrentStep] = useState(0);
 
     useEffect(() => {
-        localStorage.setItem("onboarding-step", currentStep.toString());
-    }, [currentStep]);
+        const loadOnboardingStatus = async () => {
+            try {
+                const status = await getOnboardingStatusFn();
+                setCurrentStep(status.onboardingStep);
+            } catch (error) {
+                console.error("Failed to load onboarding status:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        loadOnboardingStatus();
+    }, []);
 
     const steps: OnboardingStep[] = [
         {
@@ -169,12 +175,21 @@ function RouteComponent() {
     const totalSteps = steps.length;
     const progress = ((currentStep + 1) / totalSteps) * 100;
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentStep < totalSteps - 1) {
+            const nextStep = currentStep + 1;
             setDirection("forward");
             setIsTransitioning(true);
+
+            try {
+                await updateOnboardingStepFn({ data: { step: nextStep } });
+            } catch (error) {
+                console.error("Failed to save onboarding step:", error);
+                toast.error("Failed to save progress");
+            }
+
             setTimeout(() => {
-                setCurrentStep(currentStep + 1);
+                setCurrentStep(nextStep);
                 setIsTransitioning(false);
             }, 150);
         } else {
@@ -182,26 +197,46 @@ function RouteComponent() {
         }
     };
 
-    const handleBack = () => {
+    const handleBack = async () => {
         if (currentStep > 0) {
+            const prevStep = currentStep - 1;
             setDirection("backward");
             setIsTransitioning(true);
+
+            try {
+                await updateOnboardingStepFn({ data: { step: prevStep } });
+            } catch (error) {
+                console.error("Failed to save onboarding step:", error);
+            }
+
             setTimeout(() => {
-                setCurrentStep(currentStep - 1);
+                setCurrentStep(prevStep);
                 setIsTransitioning(false);
             }, 150);
         }
     };
 
-    const handleComplete = () => {
-        localStorage.setItem("onboarding-completed", "true");
-        localStorage.removeItem("onboarding-step");
-        navigate({ to: "/account/documents" });
+    const handleComplete = async () => {
+        try {
+            await completeOnboardingFn({ data: { completed: true } });
+            navigate({ to: "/account/documents" });
+        } catch (error) {
+            console.error("Failed to complete onboarding:", error);
+            toast.error("Failed to complete onboarding. Please try again.");
+        }
     };
 
     const handleSkip = () => {
         handleComplete();
     };
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen w-full flex items-center justify-center p-4 bg-linear-to-br from-background via-muted/10 to-background">
+                <div className="text-muted-foreground">Loading...</div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen w-full flex items-center justify-center p-4 bg-linear-to-br from-background via-muted/10 to-background relative overflow-hidden">

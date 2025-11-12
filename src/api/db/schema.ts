@@ -80,6 +80,8 @@ export const users = pgTable("users", {
     id: uuid("id").defaultRandom().primaryKey(),
     name: varchar("name", { length: 255 }).notNull(),
     email: text("email").notNull().unique(),
+    onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
+    onboardingStep: integer("onboarding_step").default(0).notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

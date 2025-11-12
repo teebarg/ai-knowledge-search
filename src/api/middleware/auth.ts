@@ -78,6 +78,8 @@ export async function authMiddleware(c: Context, next: Next) {
                 id: user.id,
                 name,
                 email: user.email,
+                onboardingCompleted: false,
+                onboardingStep: 0,
             });
         }
 
