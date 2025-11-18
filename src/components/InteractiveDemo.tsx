@@ -1,5 +1,6 @@
-import { Send, Sparkles } from "lucide-react";
+import { MessageSquare, Send, Sparkles } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import { Badge } from "~/components/ui/badge";
 
 export default function InteractiveDemo() {
     const [query, setQuery] = useState("");
@@ -57,13 +58,13 @@ export default function InteractiveDemo() {
     };
 
     return (
-        <section ref={sectionRef} className="py-24 bg-gradient-to-b from-slate-50 to-white">
+        <section ref={sectionRef} className="py-24 bg-linear-to-b from-slate-50 to-white">
             <div className="max-w-5xl mx-auto px-6">
                 <div className="text-center mb-12">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6">
-                        <Sparkles className="w-4 h-4 text-cyan-400" />
-                        <span className="text-sm font-medium text-white">Interactive Demo</span>
-                    </div>
+                    <Badge variant="secondary" className="mb-4">
+                        <MessageSquare className="h-3 w-3 mr-2" />
+                        Interactive Demo
+                    </Badge>
                     <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">See it in action</h2>
                     <p className="text-xl text-slate-600 max-w-2xl mx-auto">
                         Try asking a question to see how our AI instantly finds answers from your knowledge base.
@@ -75,7 +76,7 @@ export default function InteractiveDemo() {
                         isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95"
                     }`}
                 >
-                    <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-6 py-4 flex items-center gap-2">
+                    <div className="bg-linear-to-r from-slate-900 to-slate-800 px-6 py-4 flex items-center gap-2">
                         <div className="flex gap-2">
                             <div className="w-3 h-3 rounded-full bg-red-500"></div>
                             <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
@@ -87,7 +88,7 @@ export default function InteractiveDemo() {
                     <div className="h-96 overflow-y-auto p-6 space-y-4 bg-slate-50">
                         {messages.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center">
-                                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4">
+                                <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4">
                                     <Sparkles className="w-8 h-8 text-white" />
                                 </div>
                                 <p className="text-slate-600 mb-6 text-center">Ask a question to get started</p>
@@ -108,7 +109,7 @@ export default function InteractiveDemo() {
                                 {messages.map((message, index) => (
                                     <div key={index} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
                                         {message.type === "ai" && (
-                                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mr-3 flex-shrink-0">
+                                            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mr-3 flex-shrink-0">
                                                 <Sparkles className="w-4 h-4 text-white" />
                                             </div>
                                         )}
@@ -135,7 +136,7 @@ export default function InteractiveDemo() {
                                 ))}
                                 {isTyping && (
                                     <div className="flex justify-start">
-                                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mr-3">
+                                        <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mr-3">
                                             <Sparkles className="w-4 h-4 text-white" />
                                         </div>
                                         <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3">

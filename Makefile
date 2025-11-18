@@ -10,6 +10,10 @@ build:
 
 .PHONY: up
 up:
+	$(DOCKER_COMPOSE) up
+
+.PHONY: update
+update:
 	$(DOCKER_COMPOSE) up -d
 
 .PHONY: down

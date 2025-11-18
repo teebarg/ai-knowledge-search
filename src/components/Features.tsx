@@ -1,5 +1,6 @@
-import { Database, MessageCircle, Settings, BarChart3, Shield, Zap } from "lucide-react";
+import { Database, MessageCircle, Settings, BarChart3, Shield, Zap, Sparkles } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { Badge } from "~/components/ui/badge";
 
 export default function Features() {
     const [isVisible, setIsVisible] = useState(false);
@@ -69,6 +70,10 @@ export default function Features() {
         <section ref={sectionRef} className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-16">
+                    <Badge variant="secondary" className="mb-4">
+                        <Sparkles className="h-3 w-3 mr-2" />
+                        Powerful features
+                    </Badge>
                     <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Everything you need to search smarter</h2>
                     <p className="text-xl text-slate-600 max-w-2xl mx-auto">
                         Powerful features designed for modern teams who value speed and accuracy.

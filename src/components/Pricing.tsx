@@ -1,9 +1,12 @@
-import { Check, Sparkles } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { Check, Sparkles, Zap } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
+import { Badge } from "~/components/ui/badge";
 
 export default function Pricing() {
     const [isVisible, setIsVisible] = useState(false);
     const sectionRef = useRef<HTMLDivElement>(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -70,10 +73,18 @@ export default function Pricing() {
         },
     ];
 
+    const handleGetStarted = () => {
+        navigate({ to: "/auth" });
+    };
+
     return (
         <section ref={sectionRef} className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-16">
+                    <Badge variant="secondary" className="mb-4">
+                        <Zap className="h-3 w-3 mr-2" />
+                        Simple pricing
+                    </Badge>
                     <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">Simple, transparent pricing</h2>
                     <p className="text-xl text-slate-600 max-w-2xl mx-auto">Start free and scale as you grow. No hidden fees, cancel anytime.</p>
                 </div>
@@ -91,7 +102,7 @@ export default function Pricing() {
                         >
                             {plan.popular && (
                                 <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                                    <div className="flex items-center gap-1 px-4 py-1 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full text-white text-sm font-semibold shadow-lg">
+                                    <div className="flex items-center gap-1 px-4 py-1 bg-linear-to-r from-blue-500 to-cyan-500 rounded-full text-white text-sm font-semibold shadow-lg">
                                         <Sparkles className="w-4 h-4" />
                                         Most Popular
                                     </div>
@@ -111,11 +122,12 @@ export default function Pricing() {
                             </div>
 
                             <button
-                                className={`w-full py-3 px-6 rounded-xl font-semibold mb-8 transition-all duration-200 ${
+                                className={`w-full py-3 px-6 rounded-xl font-semibold mb-8 transition-all duration-200 cursor-pointer ${
                                     plan.popular
                                         ? "bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
                                         : "bg-slate-900 text-white hover:bg-slate-800"
                                 }`}
+                                onClick={handleGetStarted}
                             >
                                 {plan.cta}
                             </button>
@@ -123,7 +135,7 @@ export default function Pricing() {
                             <ul className="space-y-3">
                                 {plan.features.map((feature) => (
                                     <li key={feature} className="flex items-start gap-3">
-                                        <div className={`rounded-full p-1 ${plan.popular ? "bg-green-500/20" : "bg-green-100"} flex-shrink-0`}>
+                                        <div className={`rounded-full p-1 ${plan.popular ? "bg-green-500/20" : "bg-green-100"} shrink-0`}>
                                             <Check className={`w-4 h-4 ${plan.popular ? "text-green-400" : "text-green-600"}`} />
                                         </div>
                                         <span className={`text-sm ${plan.popular ? "text-slate-200" : "text-slate-600"}`}>{feature}</span>
