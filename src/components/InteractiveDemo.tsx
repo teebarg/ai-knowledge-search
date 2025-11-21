@@ -58,15 +58,15 @@ export default function InteractiveDemo() {
     };
 
     return (
-        <section ref={sectionRef} className="py-24 bg-linear-to-b from-slate-50 to-white">
+        <section ref={sectionRef} className="py-24">
             <div className="max-w-5xl mx-auto px-6">
                 <div className="text-center mb-12">
                     <Badge variant="secondary" className="mb-4">
                         <MessageSquare className="h-3 w-3 mr-2" />
                         Interactive Demo
                     </Badge>
-                    <h2 className="text-4xl md:text-5xl font-bold text-slate-900 mb-4">See it in action</h2>
-                    <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+                    <h2 className="text-4xl md:text-5xl font-bold mb-4">See it in action</h2>
+                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                         Try asking a question to see how our AI instantly finds answers from your knowledge base.
                     </p>
                 </div>
@@ -85,13 +85,13 @@ export default function InteractiveDemo() {
                         <span className="ml-4 text-sm font-medium text-slate-300">AI Knowledge Search</span>
                     </div>
 
-                    <div className="h-96 overflow-y-auto p-6 space-y-4 bg-slate-50">
+                    <div className="h-96 overflow-y-auto p-6 space-y-4 bg-background">
                         {messages.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center">
                                 <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-4">
-                                    <Sparkles className="w-8 h-8 text-white" />
+                                    <Sparkles className="w-8 h-8" />
                                 </div>
-                                <p className="text-slate-600 mb-6 text-center">Ask a question to get started</p>
+                                <p className="text-muted-foreground mb-6 text-center">Ask a question to get started</p>
                                 <div className="flex flex-wrap gap-2 justify-center">
                                     {exampleQueries.map((example) => (
                                         <button
@@ -109,7 +109,7 @@ export default function InteractiveDemo() {
                                 {messages.map((message, index) => (
                                     <div key={index} className={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}>
                                         {message.type === "ai" && (
-                                            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mr-3 flex-shrink-0">
+                                            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mr-3 shrink-0">
                                                 <Sparkles className="w-4 h-4 text-white" />
                                             </div>
                                         )}
@@ -137,7 +137,7 @@ export default function InteractiveDemo() {
                                 {isTyping && (
                                     <div className="flex justify-start">
                                         <div className="w-8 h-8 rounded-lg bg-linear-to-br from-blue-500 to-cyan-500 flex items-center justify-center mr-3">
-                                            <Sparkles className="w-4 h-4 text-white" />
+                                            <Sparkles className="w-4 h-4" />
                                         </div>
                                         <div className="bg-white border border-slate-200 rounded-2xl px-4 py-3">
                                             <div className="flex gap-1">

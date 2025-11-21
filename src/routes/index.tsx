@@ -8,6 +8,8 @@ import Pricing from "~/components/Pricing";
 import Footer from "~/components/Footer";
 import { Card } from "~/components/ui/card";
 import TrustedBy from "~/components/TrustedBy";
+import HeroNetworkGraph from "~/components/landing/HeroNetworkGraph";
+import { motion } from "framer-motion";
 
 export const Route = createFileRoute("/")({
     component: RouteComponent,
@@ -65,34 +67,46 @@ function RouteComponent() {
             </header>
 
             {/* Hero Section */}
-            <section className="container mx-auto px-4 pt-20 pb-32">
-                <div className="max-w-4xl mx-auto text-center animate-fade-up">
-                    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/50 text-accent-foreground mb-8 animate-scale-in">
-                        <Sparkles className="h-4 w-4" />
-                        <span className="text-sm font-medium">Your knowledge, searchable by AI</span>
+            <section className="relative container mx-auto px-4 pt-24 pb-32 overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-hero opacity-50 blur-3xl" />
+                <div className="relative max-w-7xl mx-auto">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                        {/* Left Column - Text Content */}
+                        <div className="text-center lg:text-left animate-fade-up">
+                            <Badge variant="secondary" className="mb-6 px-4 py-2 text-sm font-medium animate-scale-in">
+                                <Sparkles className="h-3 w-3 mr-2" />
+                                Trusted by 10,000+ teams worldwide
+                            </Badge>
+
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold tracking-tight mb-6 leading-tight">
+                                Search smarter.
+                                <br />
+                                <span className="bg-gradient-primary bg-clip-text text-transparent">Discover insights</span>
+                                <br />
+                                from your data.
+                            </h1>
+
+                            <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed">
+                                Connect your knowledge sources and let AI surface answers instantly. No more endless document hunting.
+                            </p>
+
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                <Button size="lg" className="text-lg h-14 px-8 animate-fade-up" onClick={handleGetStarted}>
+                                    Get Started Free
+                                    <ArrowRight className="ml-2 h-5 w-5" />
+                                </Button>
+                                <Button size="lg" variant="outline" className="text-lg h-14 px-8 animate-fade-up" style={{ animationDelay: "0.1s" }}>
+                                    View Demo
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Right Column - Network Graph */}
+                        <div className="relative animate-fade-up" style={{ animationDelay: "0.2s" }}>
+                            <HeroNetworkGraph />
+                        </div>
                     </div>
-
-                    <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-                        Search Your Documents
-                        <br />
-                        <span className="bg-gradient-primary bg-clip-text text-transparent">With AI Power</span>
-                    </h1>
-
-                    <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-                        Upload your documents and let AI understand them. Search naturally, get instant answers, and discover insights you never knew
-                        existed.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                        <Button size="lg" className="text-lg" onClick={handleGetStarted}>
-                            Try for Free
-                        </Button>
-                        <Button size="lg" variant="outline" className="text-lg">
-                            Watch Demo
-                        </Button>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground mt-12">
                         {benefits.map((benefit, i) => (
                             <div key={i} className="flex items-center gap-2">
                                 <benefit.icon className="h-4 w-4 text-primary" />
@@ -101,6 +115,19 @@ function RouteComponent() {
                         ))}
                     </div>
                 </div>
+                <motion.div
+                    className="absolute bottom-10 left-1/2 transform -translate-x-1/2"
+                    animate={{ y: [0, 10, 0] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                >
+                    <div className="w-6 h-10 border-2 border-slate-400 rounded-full flex items-start justify-center p-2">
+                        <motion.div
+                            className="w-1 h-2 bg-slate-400 rounded-full"
+                            animate={{ y: [0, 6, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                        />
+                    </div>
+                </motion.div>
             </section>
 
             <TrustedBy />
