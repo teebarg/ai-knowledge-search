@@ -78,7 +78,7 @@ export default function Pricing() {
     };
 
     return (
-        <section ref={sectionRef} className="py-24 bg-white">
+        <section id="pricing" ref={sectionRef} className="py-24 bg-white">
             <div className="max-w-7xl mx-auto px-6">
                 <div className="text-center mb-16">
                     <Badge variant="secondary" className="mb-4">
