@@ -6,7 +6,6 @@ import Features from "~/components/Features";
 import InteractiveDemo from "~/components/InteractiveDemo";
 import Pricing from "~/components/Pricing";
 import Footer from "~/components/Footer";
-import { Card } from "~/components/ui/card";
 import TrustedBy from "~/components/TrustedBy";
 import HeroNetworkGraph from "~/components/landing/HeroNetworkGraph";
 import { motion } from "framer-motion";
@@ -48,7 +47,6 @@ function RouteComponent() {
 
     return (
         <div className="min-h-screen bg-gradient-subtle">
-            {/* Header */}
             <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
                 <div className="container mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -66,7 +64,6 @@ function RouteComponent() {
                 </div>
             </header>
 
-            {/* Hero Section */}
             <section className="relative container mx-auto px-4 pt-24 pb-32 overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-hero opacity-50 blur-3xl" />
                 <div className="relative max-w-7xl mx-auto">
@@ -132,16 +129,15 @@ function RouteComponent() {
 
             <TrustedBy />
 
-            {/* How It Works Section */}
-            <section className="container mx-auto px-4 py-32">
+            <section className="px-4 py-32 bg-white">
                 <div className="max-w-6xl mx-auto">
                     <div className="text-center mb-20">
                         <Badge variant="secondary" className="mb-4">
                             <Clock className="h-3 w-3 mr-2" />
                             Get started in minutes
                         </Badge>
-                        <h2 className="text-4xl md:text-5xl font-bold mb-4">How it works</h2>
-                        <p className="text-xl text-muted-foreground">Three simple steps to transform your knowledge management</p>
+                        <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">How it works</h2>
+                        <p className="text-xl text-slate-600">Three simple steps to transform your knowledge management</p>
                     </div>
 
                     <div className="grid md:grid-cols-3 gap-8">
@@ -154,8 +150,8 @@ function RouteComponent() {
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
                                         {i + 1}
                                     </div>
-                                    <h3 className="text-xl font-semibold mb-3">{step.title}</h3>
-                                    <p className="text-muted-foreground">{step.description}</p>
+                                    <h3 className="text-xl font-semibold mb-3 text-slate-900">{step.title}</h3>
+                                    <p className="text-slate-600">{step.description}</p>
                                 </div>
                                 {i < steps.length - 1 && <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-border" />}
                             </div>
@@ -169,28 +165,6 @@ function RouteComponent() {
             <InteractiveDemo />
 
             <Pricing />
-
-            <section className="container mx-auto px-4 pt-14 pb-32">
-                <Card className="max-w-4xl mx-auto p-12 text-center bg-gradient-hero border-2 shadow-2xl animate-fade-up">
-                    <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                        Ready to unlock your
-                        <br />
-                        <span className="bg-gradient-primary bg-clip-text text-transparent">knowledge potential?</span>
-                    </h2>
-                    <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                        Join thousands of teams who have transformed how they access and use their knowledge
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                        <Button size="lg" className="text-lg h-14 px-8" onClick={() => navigate({ to: "/auth" })}>
-                            Get Started — It's Free
-                            <ArrowRight className="ml-2 h-5 w-5" />
-                        </Button>
-                        <Button size="lg" variant="outline" className="text-lg h-14 px-8">
-                            View Demo
-                        </Button>
-                    </div>
-                </Card>
-            </section>
 
             <Footer />
         </div>
