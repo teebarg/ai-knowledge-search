@@ -62,18 +62,25 @@ const HeroNetworkGraph = () => {
     const animationRef = useRef<number>(0);
     const simulationRef = useRef<d3.Simulation<Node, Link>>(null);
 
-    // Memoize colors to avoid recalculating on every frame
-    const colors = useMemo(
-        () => ({
+    const [colors, setColors] = useState({
+        primary: "rgba(99,102,241,1)",
+        primaryLight: "rgba(99,102,241,0.7)",
+        primaryGlow: "rgba(99,102,241,0.4)",
+        linkStart: "rgba(99,102,241,0.3)",
+        linkEnd: "rgba(99,102,241,0.3)",
+        foreground: "white",
+    });
+
+    useEffect(() => {
+        setColors({
             primary: getCSSColor("--primary", 1),
             primaryLight: getCSSColor("--primary", 0.7),
             primaryGlow: getCSSColor("--primary", 0.4),
             linkStart: getCSSColor("--primary", 0.3),
             linkEnd: getCSSColor("--primary", 0.3),
             foreground: getCSSColor("--foreground", 1),
-        }),
-        []
-    );
+        });
+    }, []);
 
     useEffect(() => {
         const updateDimensions = () => {

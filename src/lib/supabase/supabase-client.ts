@@ -5,7 +5,6 @@ export function getSupabaseClient() {
         auth: {
             autoRefreshToken: true,
             persistSession: true,
-            storage: window.localStorage,
         },
     });
 }

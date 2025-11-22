@@ -9,9 +9,15 @@ import Footer from "~/components/Footer";
 import TrustedBy from "~/components/TrustedBy";
 import HeroNetworkGraph from "~/components/landing/HeroNetworkGraph";
 import { motion } from "framer-motion";
+import { fetchUser } from "~/lib/supabase/fetch-user-server-fn";
 
 export const Route = createFileRoute("/")({
     component: RouteComponent,
+    loader: async () => {
+        const user = await fetchUser();
+        const isAuthenticated = user !== null;
+        return { isAuthenticated };
+    },
 });
 
 function RouteComponent() {
@@ -39,6 +45,8 @@ function RouteComponent() {
         },
     ];
 
+    const { isAuthenticated } = Route.useLoaderData();
+
     const navigate = useNavigate();
 
     const handleGetStarted = () => {
@@ -53,14 +61,18 @@ function RouteComponent() {
                         <Sparkles className="h-6 w-6 text-primary" />
                         <span className="text-xl font-semibold">KnowledgeAI</span>
                     </div>
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" onClick={handleGetStarted}>
-                            Sign In
-                        </Button>
-                        <Button className="animate-scale-in cursor-pointer" onClick={handleGetStarted}>
-                            Get Started
-                        </Button>
-                    </div>
+                    {isAuthenticated ? (
+                        <Button onClick={() => navigate({ to: "/account" })}>Dashboard</Button>
+                    ) : (
+                        <div className="flex items-center gap-4">
+                            <Button variant="ghost" onClick={handleGetStarted}>
+                                Sign In
+                            </Button>
+                            <Button className="animate-scale-in cursor-pointer" onClick={handleGetStarted}>
+                                Get Started
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </header>
 
